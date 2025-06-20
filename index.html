@@ -46,6 +46,22 @@
             background: #71717a; /* stone-500 */
         }
 
+        /* New scrollbar for custom themes using CSS variables */
+        .accent-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .accent-scrollbar::-webkit-scrollbar-track {
+            background: var(--scrollbar-track-color);
+            border-radius: 10px;
+        }
+        .accent-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
+        }
+        .accent-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color-hover);
+        }
+
 
         /* Style for the color input itself */
         input[type="color"] {
@@ -242,7 +258,7 @@
             // Format time without seconds
             const formattedTime = msg.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // FIX START - Apply showOthersBubbleColors logic
+            // Apply showOthersBubbleColors logic
             let bubbleBgStyle = {};
             let bubbleBgClass = '';
             let bubbleTextColorClass = '';
@@ -441,13 +457,12 @@
           // NEW: Custom Main Background value (hex or URL)
           const [customMainBgValue, setCustomMainBgValue] = React.useState(localStorage.getItem('chat_custom_main_bg_value') || '#FFFFFF');
 
-          // FIX START - New states for custom theme presets
+          // New states for custom theme presets
           const [customThemePresets, setCustomThemePresets] = React.useState({
               slot1: { name: '', theme: null },
               slot2: { name: '', theme: null },
               slot3: { name: '', theme: null },
           });
-          // FIX END
 
           const [showUserProfileModal, setShowUserProfileModal] = React.useState(false);
           const [selectedUserProfileId, setSelectedUserProfileId] = React.useState(null);
@@ -485,22 +500,23 @@
           const messagesEndRef = React.useRef(null);
           const messagesContainerRef = React.useRef(null); // Ref for the scrollable messages container
           
-          // FIX START - Remove unreadCountInActiveRoom and lastFocusedTimestamp
-          // const [unreadCountInActiveRoom, setUnreadCountInActiveRoom] = React.useState(0);
-          // const lastFocusedTimestamp = React.useRef(Date.now());
-          // FIX END
-
           // New state for typing indicator
           const [typingUsers, setTypingUsers] = React.useState([]);
           const typingTimeoutRef = React.useRef(null); // Ref to hold the timeout for typing status
-          // FIX START - New state for showing others' bubble colors
+          // New state for showing others' bubble colors
           const [showOthersBubbleColors, setShowOthersBubbleColors] = React.useState(true);
-          // FIX END
 
           // NEW: Global Announcement states
           const [globalAnnouncement, setGlobalAnnouncement] = React.useState(null); // { text, senderDisplayName, timestamp }
           const [showGlobalAnnouncement, setShowGlobalAnnouncement] = React.useState(true); // To allow user to dismiss it locally
           const lastDismissedAnnouncementId = React.useRef(localStorage.getItem('chat_last_dismissed_announcement_id') || null);
+
+          // NEW: State for InfoIconModal
+          const [showInfoModal, setShowInfoModal] = React.useState(false);
+          const [infoModalContent, setInfoModalContent] = React.useState({ title: '', message: '', imageUrl: '' });
+
+          // NEW: State for Changelog Modal
+          const [showChangelogModal, setShowChangelogModal] = React.useState(false);
 
 
           // Define themes
@@ -530,6 +546,7 @@
                 buttonTertiaryText: 'text-stone-800', // Text on secondary UI buttons
                 buttonTertiaryHover: 'hover:bg-stone-400',
                 scrollbar: 'custom-scrollbar',
+                scrollbarVars: {}, // No specific vars for default
             },
             warm: {
                 name: 'Warm Coffee',
@@ -556,6 +573,7 @@
                 buttonTertiaryText: 'text-amber-900',
                 buttonTertiaryHover: 'hover:bg-amber-400',
                 scrollbar: 'custom-scrollbar',
+                scrollbarVars: {},
             },
             cool: {
                 name: 'Cool Breeze',
@@ -582,6 +600,7 @@
                 buttonTertiaryText: 'text-blue-800',
                 buttonTertiaryHover: 'hover:bg-blue-400',
                 scrollbar: 'custom-scrollbar',
+                scrollbarVars: {},
             },
           };
 
@@ -602,7 +621,16 @@
 
                   const otherBubbleBgColor = getContrastingTextColor(customUIBgColor) === '#000000' ? '#e0e0e0' : '#333333'; // Default other bubble if not set by user
                   const otherBubbleTextColor = getContrastingTextColor(otherBubbleBgColor);
-                  
+
+                  // Calculate hover color for accent scrollbar thumb
+                  const r = parseInt(customThemeAccentColor.substring(1, 3), 16);
+                  const g = parseInt(customThemeAccentColor.substring(3, 5), 16);
+                  const b = parseInt(customThemeAccentColor.substring(5, 7), 16);
+                  const accentColorHover = `rgb(${Math.min(255, r + 30)}, ${Math.min(255, g + 30)}, ${Math.min(255, b + 30)})`; // Slightly lighter for hover
+
+                  const scrollbarTrackColor = getContrastingTextColor(customUIBgColor) === '#000000' ? '#e7e5e4' : '#3f3f46'; // stone-200 or stone-700
+
+
                   return {
                       name: 'Custom',
                       mainBgClass: '', // Will be handled by inline style
@@ -638,7 +666,12 @@
                       buttonTertiaryText: `text-[${secondaryButtonTextColor}]`,
                       buttonTertiaryHover: 'hover:brightness-110',
                       
-                      scrollbar: getContrastingTextColor(customUIBgColor) === '#000000' ? 'custom-scrollbar' : 'dark-scrollbar',
+                      scrollbar: 'accent-scrollbar', // Use the new accent-controlled scrollbar
+                      scrollbarVars: { // Define CSS variables for the accent-scrollbar
+                          '--accent-color': customThemeAccentColor,
+                          '--accent-color-hover': accentColorHover,
+                          '--scrollbar-track-color': scrollbarTrackColor,
+                      },
                   };
               }
               // For default, warm, cool themes, ensure they also use the new properties for consistency
@@ -660,6 +693,7 @@
                 buttonSecondaryHover: selectedTheme.buttonSecondaryHover,
                 buttonSecondaryText: 'text-white', // Assume white for default secondary buttons
                 buttonPrimaryText: 'text-white', // Assume white for default primary buttons
+                scrollbarVars: {}, // No special vars for built-in themes
               };
           }, [currentThemeName, customThemeAccentColor, customUIBgColor, customUITextColor, customUISecondaryTextColor, customUISecondaryBgColor, customMainBgType, customMainBgValue, themes]);
 
@@ -732,7 +766,7 @@
               }
           }, [userId, activeRoomCode, isLoggedIn, db, appId, displayName, displayUsername, profilePictureUrl]);
 
-          // FIX START - Modified initial data loading and Firestore saving
+          // Modified initial data loading and Firestore saving
           const saveUserSettingsToFirestore = React.useCallback(async () => {
             if (!userId) return;
 
@@ -916,7 +950,6 @@
               customMainBgType, customMainBgValue, customThemePresets, recentRooms, showOthersBubbleColors,
               saveUserSettingsToFirestore // Include the memoized save function
           ]);
-          // FIX END
 
           // Debounce effect for profile decoration URL and size
           React.useEffect(() => {
@@ -1060,20 +1093,6 @@
               }));
               newFetchedMessages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
               
-              // FIX START - Removed unread message count logic
-              // const prevMessages = messages; // Get the previous state of messages for comparison
-              // const newMessages = newFetchedMessages.filter(msg => {
-              //     // Check if the message ID exists in the previous messages array
-              //     // and if it's not sent by the current user
-              //     return !prevMessages.some(pMsg => pMsg.id === msg.id) && msg.senderId !== userId;
-              // });
-              // if (document.hidden) {
-              //     setUnreadCountInActiveRoom(prevCount => prevCount + newMessages.length);
-              // } else {
-              //     setUnreadCountInActiveRoom(0); // Reset if tab is visible
-              // }
-              // FIX END
-
               setMessages(newFetchedMessages); 
               scrollToBottom(); 
               console.log(`Messages useEffect: Fetched ${newFetchedMessages.length} messages for room ${activeRoomCode}`);
@@ -1147,44 +1166,6 @@
                 unsubscribe();
             };
           }, [activeRoomCode, isAuthReady, isLoggedIn, userId, db, appId, updateTypingStatus]);
-
-          // FIX START - Removed dynamic tab title useEffect
-          /*
-          React.useEffect(() => {
-            let baseTitle = "coffee shop chatrooms";
-            if (activeRoomCode) {
-                const isDM = activeRoomCode.includes('_');
-                const roomDisplayName = isDM
-                    ? (friendsList.find(f => f.dmRoomCode === activeRoomCode)?.displayName || 'Direct Message')
-                    : `#${activeRoomCode}`;
-                baseTitle = roomDisplayName;
-            }
-
-            // Prepend unread count if greater than 0
-            document.title = unreadCountInActiveRoom > 0 
-                ? `(${unreadCountInActiveRoom}) ${baseTitle}` 
-                : baseTitle;
-
-          }, [activeRoomCode, friendsList, unreadCountInActiveRoom]);
-          */
-          // FIX END
-
-          // FIX START - Removed effect to clear unread notification on focus
-          /*
-          React.useEffect(() => {
-              const handleVisibilityChange = () => {
-                  if (document.visibilityState === 'visible') {
-                      setUnreadCountInActiveRoom(0); // Reset unread count
-                  }
-              };
-
-              document.addEventListener('visibilitychange', handleVisibilityChange);
-              return () => {
-                  document.removeEventListener('visibilitychange', handleVisibilityChange);
-              };
-          }, []);
-          */
-          // FIX END
 
           // NEW: Effect to listen for global announcements
           React.useEffect(() => {
@@ -1260,12 +1241,11 @@
                 customUISecondaryBgColor: '#e7e5e4', // NEW
                 customMainBgType: 'color',
                 customMainBgValue: '#FFFFFF',
-                // FIX START - Initialize new settings
+                // Initialize new settings
                 currentThemeName: 'default',
                 customThemePresets: { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } },
                 showOthersBubbleColors: true,
                 recentRooms: [],
-                // FIX END
               };
 
               await setDoc(doc(db, `artifacts/${appId}/users/${registeredUser.uid}/userProfiles`, registeredUser.uid), newUserProfileData);
@@ -1293,7 +1273,7 @@
               setShowRegisterModal(false);
               setSuccessMessage('registration successful! you are now logged in.');
 
-              // FIX START - Update local storage for redundancy, but Firestore is source of truth now
+              // Update local storage for redundancy, but Firestore is source of truth now
               localStorage.setItem('chat_display_username', registerDisplayName.toLowerCase());
               localStorage.setItem('chat_display_name', registerDisplayName);
               localStorage.setItem('chat_profile_picture_url', '');
@@ -1316,7 +1296,6 @@
               localStorage.setItem('chat_theme', 'default');
               localStorage.setItem('chat_custom_theme_accent_color', '#8b5cf6');
               // No need to save presets/recentRooms/showOthersBubbleColors to localStorage directly as they are now in Firestore.
-              // FIX END
               console.log("Registered and logged in user:", registeredUser.email);
 
             } catch (error) {
@@ -1391,12 +1370,11 @@
                             customUISecondaryBgColor: '#e7e5e4', // NEW
                             customMainBgType: 'color',
                             customMainBgValue: '#FFFFFF',
-                            // FIX START - Initialize new settings for new profiles
+                            // Initialize new settings for new profiles
                             currentThemeName: 'default',
                             customThemePresets: { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } },
                             showOthersBubbleColors: true,
                             recentRooms: [],
-                            // FIX END
                         };
                         await setDoc(userProfileRef, profileData);
                     }
@@ -1428,7 +1406,7 @@
                 setShowLoginModal(false);
                 setSuccessMessage('login successful!');
 
-                // FIX START - Load new settings from profileData
+                // Load new settings from profileData
                 setCurrentThemeName(profileData.currentThemeName || 'default');
                 setCustomThemeAccentColor(profileData.customThemeAccentColor || '#8b5cf6');
                 setCustomUIBgColor(profileData.customUIBgColor || '#ffffff');
@@ -1440,7 +1418,6 @@
                 setCustomThemePresets(profileData.customThemePresets || { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
                 setShowOthersBubbleColors(profileData.showOthersBubbleColors !== undefined ? profileData.showOthersBubbleColors : true);
                 setRecentRooms(profileData.recentRooms || []);
-                // FIX END
                 
                 console.log("Logged in user:", loggedInUser.email);
 
@@ -1456,10 +1433,6 @@
             }
             setErrorMessage('');
             setSuccessMessage('');
-            // FIX START - Removed unread count reset
-            // setUnreadCountInActiveRoom(0);
-            // lastFocusedTimestamp.current = Date.now();
-            // FIX END
 
             const codeToJoin = roomCode;
 
@@ -1744,12 +1717,11 @@
                     customUISecondaryBgColor: customUISecondaryBgColor, // NEW
                     customMainBgType: customMainBgType,
                     customMainBgValue: customMainBgValue,
-                    // FIX START - Save new settings to Firestore during profile update
+                    // Save new settings to Firestore during profile update
                     currentThemeName: currentThemeName,
                     customThemePresets: customThemePresets,
                     showOthersBubbleColors: showOthersBubbleColors,
                     recentRooms: recentRooms,
-                    // FIX END
                 }, { merge: true });
 
                 // Update local states and local storage (local storage for redundancy)
@@ -1972,7 +1944,7 @@
               // saveUserSettingsToFirestore() will be triggered by useEffect
           };
 
-          // FIX START - Preset handlers
+          // Preset handlers
           const savePreset = (slotKey, presetName) => {
             const currentThemeSettings = {
                 currentThemeName,
@@ -2017,7 +1989,6 @@
                 setErrorMessage('no theme saved in this slot.');
             }
           };
-          // FIX END
 
           // Function to open a user's profile modal
           const handleOpenUserProfile = (profileId) => {
@@ -2287,6 +2258,12 @@
             return null; // Should not happen
           }, [typingUsers, currentTheme.secondaryText]);
 
+          // Function to open the info modal
+          const openInfoModal = (title, message, imageUrl = '') => {
+            setInfoModalContent({ title, message, imageUrl });
+            setShowInfoModal(true);
+          };
+
 
           // Logging for overall App render conditions
           console.log("App Render cycle. isLoggedIn:", isLoggedIn, "activeRoomCode:", activeRoomCode, "showLoginModal:", showLoginModal, "showRegisterModal:", showRegisterModal, "isAdmin:", isAdmin);
@@ -2445,7 +2422,6 @@
                         <i className="fas fa-cog text-xl"></i>
                       </button>
 
-                      {/* FIX START - Duplicate chat settings button */}
                       <button
                         onClick={() => setShowChatSettingsModal(true)}
                         className={`absolute top-4 right-20 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full shadow-md ${currentTheme.buttonTertiaryHover} transition duration-300 z-10`}
@@ -2453,7 +2429,6 @@
                       >
                         <i className="fas fa-paint-brush text-xl"></i>
                       </button>
-                      {/* FIX END */}
 
                       {/* Admin Panel Button (Conditional) */}
                       {isAdmin && (
@@ -2487,7 +2462,7 @@
                       </div>
 
                       {/* Left Panel: Predefined Chatrooms */}
-                      <div className={`flex-1 ${currentTheme.messagesBg} p-6 rounded-lg overflow-y-auto ${currentTheme.scrollbar}`}>
+                      <div className={`flex-1 ${currentTheme.messagesBg} p-6 rounded-lg overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                         {currentView === 'chatrooms' ? (
                           <>
                             <h2 className={`text-2xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center pt-16`}>join a chatroom</h2>
@@ -2530,7 +2505,7 @@
                               </button>
                             </form>
                             {recentRooms.length > 0 && (
-                              <div className={`mt-8 pt-4 border-t ${currentTheme.inputBorder} max-h-[200px] overflow-y-auto ${currentTheme.scrollbar}`}>
+                              <div className={`mt-8 pt-4 border-t ${currentTheme.inputBorder} max-h-[200px] overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                 <h3 className={`text-xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center`}>recently entered chats</h3>
                                 <div className={`space-y-2`}>
                                   {recentRooms.map((roomCode) => (
@@ -2549,7 +2524,7 @@
                         )}
                         
                         {currentView === 'dms' && (
-                          <div className="flex-1 overflow-y-auto custom-scrollbar">
+                          <div className={`flex-1 overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                               <h2 className={`text-2xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center pt-16`}>your direct messages</h2>
                               {friendsList.length === 0 ? (
                                 <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase`}>you have no friends yet. click on a user's name in a chatroom to add them!</p>
@@ -2626,9 +2601,9 @@
                         </div>
                       </div>
 
-                      <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto pr-2 ${currentTheme.scrollbar} p-2 rounded-lg`}>
+                      <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto pr-2 ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                         {messages.length === 0 ? (
-                          <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase ${currentTheme.messagesBg.includes('bg-gray-50') ? 'bg-yellow-100' : 'bg-yellow-900'} p-4 rounded-lg`}>
+                          <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase bg-yellow-100 p-4 rounded-lg`}>
                             no messages yet. be the first to send one!
                           </p>
                         ) : (
@@ -2693,7 +2668,6 @@
                             <i className="fas fa-cog text-xl"></i>
                         </button>
                         
-                        {/* FIX START - Duplicate chat settings button */}
                         <button
                             onClick={() => setShowChatSettingsModal(true)}
                             className={`absolute top-4 right-20 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full shadow-md ${currentTheme.buttonTertiaryHover} transition duration-300 z-10`}
@@ -2701,7 +2675,6 @@
                         >
                             <i className="fas fa-paint-brush text-xl"></i>
                         </button>
-                        {/* FIX END */}
 
                         {/* Admin Panel Button (Conditional) */}
                         {isAdmin && (
@@ -2744,7 +2717,6 @@
                                     >
                                         leave dm
                                     </button>
-                                    {/* Removed: Logout button from here */}
                                     {isAdmin ? (
                                         <button
                                             onClick={handleClearAllMessages}
@@ -2757,9 +2729,9 @@
                                 </div>
                             </div>
 
-                            <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto pr-2 ${currentTheme.scrollbar} p-2 rounded-lg`}>
+                            <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto pr-2 ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                 {messages.length === 0 ? (
-                                    <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase ${currentTheme.messagesBg.includes('bg-gray-50') ? 'bg-yellow-100' : 'bg-yellow-900'} p-4 rounded-lg`}>
+                                    <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase bg-yellow-100 p-4 rounded-lg`}>
                                         no messages yet. be the first to send one!
                                     </p>
                                 ) : (
@@ -2817,7 +2789,7 @@
                             {friendsList.length === 0 ? (
                                 <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase`}>you have no friends yet. click on a user's name in a chatroom to add them!</p>
                             ) : (
-                                <div className={`space-y-3 flex-1 overflow-y-auto custom-scrollbar`}>
+                                <div className={`space-y-3 flex-1 overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                   {friendsList.map((friend) => (
                                     <button
                                       key={friend.id}
@@ -2834,7 +2806,6 @@
                                   ))}
                                 </div>
                             )}
-                            {/* Removed: Logout button from here */}
                         </div>
                     </div>
                   )}
@@ -2843,29 +2814,42 @@
 
               {/* profile settings modal (FULL SCREEN) */}
               {showProfileModal && (
-                <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center ${currentTheme.mainBgClass}`}>
-                  <div className={`${currentTheme.chatBg} rounded-xl shadow-2xl w-full max-w-5xl h-full p-8 flex flex-col lg:flex-row gap-8 text-center overflow-y-auto ${currentTheme.scrollbar}`}>
+                <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center ${currentTheme.mainBgClass}`} style={currentTheme.scrollbarVars}>
+                  <div className={`${currentTheme.chatBg} rounded-xl shadow-2xl w-full max-w-5xl h-full p-8 flex flex-col lg:flex-row gap-8 text-center overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                     {/* Left Column: Profile Picture, Bio, and Preview */}
                     <div className="flex-1 flex flex-col items-center space-y-6 lg:border-r border-transparent lg:pr-8 pt-8">
                       <h2 className={`text-3xl font-bold ${currentTheme.textColor} lowercase`}>your profile</h2>
                       <div className="flex flex-col items-center w-full max-w-sm">
                         <label htmlFor="profilePictureUrlInput" className={`block text-center text-sm font-medium ${currentTheme.textColor} mb-2 lowercase`}>profile picture:</label>
                         <img src={profilePictureUrl || 'https://placehold.co/150x150/cccccc/ffffff?text=PFP'} alt="Profile Preview" className="w-40 h-40 rounded-full mx-auto object-cover border-4 border-stone-300 shadow-lg" onError={(e) => e.target.src='https://placehold.co/150x150/cccccc/ffffff?text=PFP'} />
-                        <input
-                          id="profilePictureUrlInput"
-                          name="profilePictureUrlInput" /* Added name attribute */
-                          type="url"
-                          defaultValue={profilePictureUrl}
-                          onChange={(e) => setProfilePictureUrl(e.target.value)}
-                          placeholder="https://placehold.co/150x150/cccccc/ffffff?text=PFP"
-                          className={`w-full mt-4 p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
-                        />
+                        <div className="relative w-full"> {/* Wrapper for input and info icon */}
+                            <input
+                              id="profilePictureUrlInput"
+                              name="profilePictureUrlInput"
+                              type="url"
+                              defaultValue={profilePictureUrl}
+                              onChange={(e) => setProfilePictureUrl(e.target.value)}
+                              placeholder="https://placehold.co/150x150/cccccc/ffffff?text=PFP"
+                              className={`w-full mt-4 p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => openInfoModal(
+                                    'Profile Picture URL Information',
+                                    'To use a custom profile picture, paste a direct image URL here. Ensure the URL ends with an image file extension (e.g., .png, .jpg, .gif). Avoid using URLs from social media profiles directly as they often expire or are not direct image links.',
+                                    'https://placehold.co/300x200/94a3b8/ffffff?text=Image+URL+Example'
+                                )}
+                                className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
+                            >
+                                <i className="fas fa-info-circle text-lg"></i>
+                            </button>
+                        </div>
                       </div>
                       <div className="w-full max-w-sm">
                         <label htmlFor="bioInput" className={`block text-center text-sm font-medium ${currentTheme.textColor} mb-2 lowercase`}>your bio:</label>
                         <textarea
                           id="bioInput"
-                          name="bioInput" /* Added name attribute */
+                          name="bioInput"
                           defaultValue={bio}
                           onChange={(e) => setBio(e.target.value)}
                           placeholder="tell us about yourself (max 160 characters)"
@@ -2876,7 +2860,6 @@
                       </div>
 
                       {/* Profile Preview Section */}
-                      {/* Increased max-w for better display and removed overflow-hidden that was causing truncation */}
                       <div
                           className={`mt-8 p-6 rounded-xl shadow-md w-full max-w-sm relative`}
                           style={{ background: `linear-gradient(to bottom right, ${profileBgFromColor}, ${profileBgToColor})` }}
@@ -2933,7 +2916,7 @@
                         <label htmlFor="displayNameInput" className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>display name:</label>
                         <input
                           id="displayNameInput"
-                          name="displayNameInput" /* Added name attribute */
+                          name="displayNameInput"
                           type="text"
                           value={displayName} // This is the state for what's shown publicly
                           onChange={(e) => setDisplayName(e.target.value)}
@@ -3027,6 +3010,7 @@
                                               title="Pick Banner Color"
                                           />
                                       ) : (
+                                        <div className="relative w-full"> {/* Wrapper for input and info icon */}
                                           <input
                                               type="url"
                                               value={profileBanner}
@@ -3034,6 +3018,18 @@
                                               placeholder="https://placehold.co/200x50/cccccc/ffffff?text=Banner"
                                               className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                           />
+                                          <button
+                                              type="button"
+                                              onClick={() => openInfoModal(
+                                                  'Profile Banner URL Information',
+                                                  'Paste a direct URL for your banner image here. It will stretch to fit the banner area.',
+                                                  'https://placehold.co/300x100/94a3b8/ffffff?text=Banner+Image+URL'
+                                              )}
+                                              className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
+                                          >
+                                              <i className="fas fa-info-circle text-lg"></i>
+                                          </button>
+                                        </div>
                                       )}
                                   </div>
                                   <div>
@@ -3100,7 +3096,7 @@
                       ...currentTheme.mainBgImageStyle
                   }}
                 >
-                  <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full h-full max-w-md text-center overflow-y-auto ${currentTheme.scrollbar}`}> {/* Added overflow-y-auto and custom-scrollbar */}
+                  <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full h-full max-w-md text-center overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                     <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>chat settings</h2>
                     <div className="space-y-4">
                       <p className={`${currentTheme.textColor} text-lg lowercase`}>choose a theme:</p>
@@ -3144,7 +3140,7 @@
                                       title="Pick UI Main Background Color"
                                   />
                               </div>
-                              {/* NEW: Secondary UI Background Color */}
+                              {/* Secondary UI Background Color */}
                               <div>
                                   <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui secondary background color (for buttons, etc.):</label>
                                   <input
@@ -3155,7 +3151,7 @@
                                       title="Pick UI Secondary Background Color"
                                   />
                               </div>
-                              {/* NEW: Primary Text Color */}
+                              {/* Primary Text Color */}
                               <div>
                                   <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui primary text color:</label>
                                   <input
@@ -3166,7 +3162,7 @@
                                       title="Pick UI Primary Text Color"
                                   />
                               </div>
-                              {/* NEW: Secondary Text Color */}
+                              {/* Secondary Text Color */}
                               <div>
                                   <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui secondary text color:</label>
                                   <input
@@ -3204,6 +3200,7 @@
                                           title="Pick Main Background Color"
                                       />
                                   ) : (
+                                    <div className="relative w-full"> {/* Wrapper for input and info icon */}
                                       <input
                                           type="url"
                                           value={customMainBgValue}
@@ -3211,6 +3208,18 @@
                                           placeholder="https://example.com/background.jpg"
                                           className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                       />
+                                      <button
+                                          type="button"
+                                          onClick={() => openInfoModal(
+                                              'Main Background Image URL Information',
+                                              'Set a custom background image for the entire application area. Ensure it is a direct image URL for best results.',
+                                              'https://placehold.co/300x200/a3e635/ffffff?text=App+Background+URL'
+                                          )}
+                                          className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
+                                      >
+                                          <i className="fas fa-info-circle text-lg"></i>
+                                      </button>
+                                    </div>
                                   )}
                               </div>
                               <div className="mt-8">
@@ -3228,7 +3237,7 @@
                           </div>
                       )}
 
-                      {/* FIX START - Custom Theme Presets */}
+                      {/* Custom Theme Presets */}
                       <div className="mt-8 pt-4 border-t border-stone-200">
                         <h3 className={`text-xl font-bold mb-4 ${currentTheme.textColor} lowercase`}>presets</h3>
                         {['slot1', 'slot2', 'slot3'].map((slotKey) => (
@@ -3263,7 +3272,6 @@
                             </div>
                         ))}
                       </div>
-                      {/* FIX END */}
 
 
                       {/* Moved: Bubble Color Selection */}
@@ -3295,7 +3303,7 @@
                         </div>
                       </div>
 
-                      {/* FIX START - Toggle for others' custom colors */}
+                      {/* Toggle for others' custom colors */}
                       <div className="mt-8 pt-4 border-t border-stone-200">
                           <label className="flex items-center justify-between cursor-pointer">
                               <span className={`${currentTheme.textColor} text-lg lowercase`}>see others' custom colors:</span>
@@ -3310,7 +3318,6 @@
                               if off, all other users' chat bubbles will appear in your chosen bubble color.
                           </p>
                       </div>
-                      {/* FIX END */}
 
                     </div>
                     <button
@@ -3405,13 +3412,26 @@
                                         />
                                     </div>
                                 )}
-                                <input
-                                    type="url"
-                                    value={tempProfileDecorationUrl}
-                                    onChange={(e) => setTempProfileDecorationUrl(e.target.value)}
-                                    placeholder="https://example.com/decoration.png (transparent png/gif)"
-                                    className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} lowercase`}
-                                />
+                                <div className="relative w-full"> {/* Wrapper for input and info icon */}
+                                    <input
+                                        type="url"
+                                        value={tempProfileDecorationUrl}
+                                        onChange={(e) => setTempProfileDecorationUrl(e.target.value)}
+                                        placeholder="https://example.com/decoration.png (transparent png/gif)"
+                                        className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} lowercase`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => openInfoModal(
+                                            'Profile Decoration URL Information',
+                                            'Upload a transparent PNG or GIF image to use as your profile decoration. This image will appear over your profile picture.',
+                                            'https://placehold.co/300x200/ef4444/ffffff?text=Decoration+URL+Example'
+                                        )}
+                                        className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
+                                    >
+                                        <i className="fas fa-info-circle text-lg"></i>
+                                    </button>
+                                </div>
                                 {/* Decoration Size Slider */}
                                 <div className="w-full max-w-sm">
                                     <label htmlFor="decorationSize" className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>decoration size (%): <span className="font-semibold">{tempProfileDecorationSize}</span></label>
@@ -3427,13 +3447,6 @@
                                     />
                                 </div>
                                 <div className="flex space-x-2 w-full">
-                                    {/* The "Save Decoration" button is now redundant because changes are debounced */}
-                                    {/* <button
-                                        onClick={handleSaveDecorationChanges}
-                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
-                                    >
-                                        clear decoration
-                                    </button> */}
                                     <button
                                         onClick={() => {
                                             setTempProfileDecorationUrl(''); // Clear the URL locally
@@ -3626,6 +3639,33 @@
                 </div>
               )}
 
+              {/* NEW: InfoIconModal */}
+              {showInfoModal && (
+                  <InfoIconModal
+                      title={infoModalContent.title}
+                      message={infoModalContent.message}
+                      imageUrl={infoModalContent.imageUrl}
+                      currentTheme={currentTheme}
+                      onClose={() => setShowInfoModal(false)}
+                  />
+              )}
+
+              {/* NEW: Changelog Button */}
+              <button
+                  onClick={() => setShowChangelogModal(true)}
+                  className={`fixed bottom-4 left-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
+                  title="View Changelog"
+              >
+                  changelog
+              </button>
+
+              {/* NEW: Changelog Modal */}
+              {showChangelogModal && (
+                  <ChangelogModal
+                      currentTheme={currentTheme}
+                      onClose={() => setShowChangelogModal(false)}
+                  />
+              )}
 
               {/* "made by" text at the bottom */}
               <p className={`mt-8 ${currentTheme.secondaryText} text-xs lowercase`}>made by oliver</p>
@@ -3746,7 +3786,7 @@
 
             return (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center ${currentTheme.scrollbar}`}>
+                    <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                         <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>user profile</h2>
                         {isLoading ? (
                             <p className={`${currentTheme.secondaryText}`}>loading profile...</p>
@@ -3938,7 +3978,7 @@
                         {isLoading ? (
                             <p className={`${currentTheme.secondaryText}`}>loading users...</p>
                         ) : (
-                            <div className={`flex-1 overflow-y-auto ${currentTheme.scrollbar} space-y-6`}>
+                            <div className={`flex-1 overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                 {activeUsersList.length > 0 && (
                                     <div>
                                         <h3 className={`text-xl font-bold mb-3 ${currentTheme.textColor} lowercase border-b pb-2 ${currentTheme.inputBorder}`}>active now</h3>
@@ -4151,7 +4191,7 @@
                         {isLoading ? (
                             <p className={`${currentTheme.secondaryText}`}>loading banned users...</p>
                         ) : (
-                            <div className={`flex-1 overflow-y-auto ${currentTheme.scrollbar} space-y-4`}>
+                            <div className={`flex-1 overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                 {bannedUsers.length === 0 ? (
                                     <p className={`${currentTheme.secondaryText} mt-8`}>no users are currently banned.</p>
                                 ) : (
@@ -4212,6 +4252,68 @@
                 </div>
             );
         };
+
+        // NEW: InfoIconModal Component
+        const InfoIconModal = ({ title, message, imageUrl, currentTheme, onClose }) => {
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
+                        <h2 className={`text-2xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>{title}</h2>
+                        <p className={`${currentTheme.textColor} mb-4 lowercase text-left`}>{message}</p>
+                        {imageUrl && (
+                            <img src={imageUrl} alt="Information example" className="w-full h-auto rounded-lg mb-6 object-cover" />
+                        )}
+                        <button
+                            onClick={onClose}
+                            className={`w-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        >
+                            got it
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // NEW: ChangelogModal Component
+        const ChangelogModal = ({ currentTheme, onClose }) => {
+            const changes = [
+                {
+                    title: "Application Initialization and Core Functionality",
+                    description: "Introduced foundational chatroom features, including user authentication via anonymous Firebase sessions, basic message sending and display, and a simplified room selection interface. User data persistence was implemented using local storage.",
+                },
+                {
+                    title: "Enhanced User Management and Theming",
+                    description: "Implemented comprehensive user authentication with email/password registration and login, replacing anonymous access. Private user profiles were integrated with Firestore for robust data management, including display names, profile pictures, and personal biographies. Direct messaging capabilities were added, allowing private conversations between users. Administrative controls were introduced, enabling message deletion on hover, user kicking from rooms, and global banning. A flexible custom theming system was developed, allowing users to personalize chat bubble colors and general UI aesthetics, with support for theme presets. Global announcements and active user tracking were also incorporated.",
+                },
+                {
+                    title: "Advanced Customization and User Experience Refinements",
+                    description: "Further expanded theme customization options to include distinct color pickers for primary and secondary UI text, and primary and secondary UI background elements, offering granular control over the application's appearance. The 'Chat UI Background Color' section was renamed to 'Chat UI' for clarity. The custom theme's accent color now dynamically influences the scrollbar's visual style. Informational icons have been added next to URL input fields, providing helpful guidance on image URL usage. A dedicated 'Changelog' feature has been added, offering a transparent overview of application updates and enhancements.",
+                },
+            ];
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col text-left overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
+                        <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase text-center`}>changelog</h2>
+                        <div className="flex-1 space-y-6">
+                            {changes.map((change, index) => (
+                                <div key={index} className="p-4 bg-stone-100 rounded-lg shadow-sm">
+                                    <h3 className={`text-xl font-bold ${currentTheme.textColor} mb-2 lowercase`}>{change.title}</h3>
+                                    <p className={`${currentTheme.secondaryText} text-sm lowercase`}>{change.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        >
+                            close
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
 
         // render the react app to the root element
         ReactDOM.render(React.createElement(App), document.getElementById('root'));
