@@ -430,6 +430,12 @@
           const [customUIBgColor, setCustomUIBgColor] = React.useState(localStorage.getItem('chat_custom_ui_bg_color') || '#ffffff');
           // NEW: Custom UI text color
           const [customUITextColor, setCustomUITextColor] = React.useState(localStorage.getItem('chat_custom_ui_text_color') || '#000000');
+          // NEW: Secondary UI text color for less prominent text (like greyed out text)
+          const [customUISecondaryTextColor, setCustomUISecondaryTextColor] = React.useState(localStorage.getItem('chat_custom_ui_secondary_text_color') || '#71717a'); // Default to stone-500 equivalent
+          // NEW: Secondary UI background color for buttons and other UI elements that previously were light/gray
+          const [customUISecondaryBgColor, setCustomUISecondaryBgColor] = React.useState(localStorage.getItem('chat_custom_ui_secondary_bg_color') || '#e7e5e4'); // Default to stone-200 equivalent
+
+
           // NEW: Custom Main Background type (color or image)
           const [customMainBgType, setCustomMainBgType] = React.useState(localStorage.getItem('chat_custom_main_bg_type') || 'color'); // 'color' or 'image'
           // NEW: Custom Main Background value (hex or URL)
@@ -510,8 +516,8 @@
                 myBubbleText: 'text-stone-800',
                 otherBubbleBg: 'bg-stone-100',
                 otherBubbleText: 'text-stone-800',
-                textColor: 'text-stone-800',
-                secondaryText: 'text-stone-500',
+                textColor: 'text-stone-800', // Primary text
+                secondaryText: 'text-stone-500', // Secondary text
                 inputBorder: 'border-stone-300',
                 inputFocus: 'focus:ring-stone-400',
                 inputBg: 'bg-white',
@@ -520,8 +526,8 @@
                 buttonPrimaryHover: 'hover:bg-stone-800',
                 buttonSecondaryBg: 'bg-stone-500',
                 buttonSecondaryHover: 'hover:bg-stone-600',
-                buttonTertiaryBg: 'bg-stone-300',
-                buttonTertiaryText: 'text-stone-800',
+                buttonTertiaryBg: 'bg-stone-300', // Secondary UI background for light buttons
+                buttonTertiaryText: 'text-stone-800', // Text on secondary UI buttons
                 buttonTertiaryHover: 'hover:bg-stone-400',
                 scrollbar: 'custom-scrollbar',
             },
@@ -583,43 +589,58 @@
           // Dynamic currentTheme calculation
           const currentTheme = React.useMemo(() => {
               if (currentThemeName === 'custom') {
-                  const textColorForSecondary = getContrastingTextColor(customUIBgColor);
-                  const otherBubbleBgColor = textColorForSecondary === '#000000' ? '#e0e0e0' : '#333333';
-                  const otherBubbleTextColor = getContrastingTextColor(otherBubbleBgColor);
-                  // FIX START - More refined custom theme colors
-                  const primaryButtonColor = customThemeAccentColor;
-                  const secondaryButtonColor = textColorForSecondary === '#000000' ? '#a8a29e' : '#52525b'; // stone-400 or stone-600
-                  const tertiaryButtonColor = textColorForSecondary === '#000000' ? '#e7e5e4' : '#3f3f46'; // stone-200 or stone-700
-                  const tertiaryButtonTextColor = getContrastingTextColor(tertiaryButtonColor);
+                  // Primary text color is customUITextColor
+                  // Secondary text color is customUISecondaryTextColor
+                  // UI Background is customUIBgColor
+                  // Secondary UI background (buttons, etc.) is customUISecondaryBgColor
 
+                  const primaryButtonColor = customThemeAccentColor;
+                  const primaryButtonTextColor = getContrastingTextColor(primaryButtonColor);
+                  
+                  const secondaryButtonColor = customUISecondaryBgColor;
+                  const secondaryButtonTextColor = getContrastingTextColor(secondaryButtonColor);
+
+                  const otherBubbleBgColor = getContrastingTextColor(customUIBgColor) === '#000000' ? '#e0e0e0' : '#333333'; // Default other bubble if not set by user
+                  const otherBubbleTextColor = getContrastingTextColor(otherBubbleBgColor);
+                  
                   return {
                       name: 'Custom',
                       mainBgClass: '', // Will be handled by inline style
                       mainBgColorStyle: customMainBgType === 'color' ? customMainBgValue : undefined,
                       mainBgImageStyle: customMainBgType === 'image' ? { backgroundImage: `url(${customMainBgValue})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {},
+                      
                       chatBg: `bg-[${customUIBgColor}]`,
-                      messagesBg: `bg-[${customUIBgColor}]`,
+                      messagesBg: `bg-[${customUIBgColor}]`, // Messages background typically same as chat background
+                      
                       myBubbleBg: `bg-[${customThemeAccentColor}]`, // My bubble color is always accent
                       myBubbleText: getContrastingTextColor(customThemeAccentColor),
+                      
                       otherBubbleBg: `bg-[${otherBubbleBgColor}]`,
                       otherBubbleText: `text-[${otherBubbleTextColor}]`,
-                      textColor: `text-[${customUITextColor}]`,
-                      secondaryText: `text-[${getContrastingTextColor(customUIBgColor) === '#000000' ? '#71717a' : '#a1a1aa'}]`, // Adjusted for contrast with custom UI bg
-                      inputBorder: `border-[${getContrastingTextColor(customUIBgColor) === '#000000' ? '#d6d3d1' : '#52525b'}]`, // Contrast with UI bg
+                      
+                      textColor: `text-[${customUITextColor}]`, // Primary UI text color
+                      secondaryText: `text-[${customUISecondaryTextColor}]`, // Secondary UI text color
+
+                      inputBorder: `border-[${getContrastingTextColor(customUIBgColor) === '#000000' ? '#d6d3d1' : '#52525b'}]`, // Contrast with UI bg for input borders
                       inputFocus: 'focus:ring-blue-500', // Standard focus ring
                       inputBg: `bg-[${customUIBgColor}]`,
                       inputTextColor: `text-[${customUITextColor}]`,
+                      
                       buttonPrimaryBg: `bg-[${primaryButtonColor}]`,
                       buttonPrimaryHover: 'hover:brightness-125',
-                      buttonSecondaryBg: `bg-[${secondaryButtonColor}]`,
+                      buttonPrimaryText: `text-[${primaryButtonTextColor}]`, // Explicit primary button text color
+                      
+                      buttonSecondaryBg: `bg-[${customUISecondaryBgColor}]`, // Secondary action buttons (e.g., leave room)
                       buttonSecondaryHover: 'hover:brightness-125',
-                      buttonTertiaryBg: `bg-[${tertiaryButtonColor}]`,
-                      buttonTertiaryText: `text-[${tertiaryButtonTextColor}]`,
+                      buttonSecondaryText: `text-[${secondaryButtonTextColor}]`,
+                      
+                      buttonTertiaryBg: `bg-[${customUISecondaryBgColor}]`, // Tertiary buttons (e.g., room selection, preset save/load)
+                      buttonTertiaryText: `text-[${secondaryButtonTextColor}]`,
                       buttonTertiaryHover: 'hover:brightness-110',
-                      scrollbar: textColorForSecondary === '#000000' ? 'custom-scrollbar' : 'dark-scrollbar',
+                      
+                      scrollbar: getContrastingTextColor(customUIBgColor) === '#000000' ? 'custom-scrollbar' : 'dark-scrollbar',
                   };
               }
-              // FIX END
               // For default, warm, cool themes, ensure they also use the new properties for consistency
               const selectedTheme = themes[currentThemeName];
               return {
@@ -631,8 +652,16 @@
                 inputBg: selectedTheme.inputBg || 'bg-white',
                 inputTextColor: selectedTheme.inputTextColor || selectedTheme.textColor,
                 scrollbar: selectedTheme.scrollbar || 'custom-scrollbar',
+                // Ensure text colors are explicitly passed for non-custom themes too
+                textColor: selectedTheme.textColor,
+                secondaryText: selectedTheme.secondaryText,
+                // Ensure secondary button colors are consistent with tertiary for simplicity in themes
+                buttonSecondaryBg: selectedTheme.buttonSecondaryBg,
+                buttonSecondaryHover: selectedTheme.buttonSecondaryHover,
+                buttonSecondaryText: 'text-white', // Assume white for default secondary buttons
+                buttonPrimaryText: 'text-white', // Assume white for default primary buttons
               };
-          }, [currentThemeName, customThemeAccentColor, customUIBgColor, customUITextColor, customMainBgType, customMainBgValue, themes]);
+          }, [currentThemeName, customThemeAccentColor, customUIBgColor, customUITextColor, customUISecondaryTextColor, customUISecondaryBgColor, customMainBgType, customMainBgValue, themes]);
 
           // Define bubble color options for profile settings
           const bubbleColorOptions = [
@@ -649,13 +678,13 @@
 
           // predefined chatrooms for the left panel
           const predefinedChatrooms = [
-            { name: 'general', label: 'general' },
-            { name: 'studying', label: 'studying' },
-            { name: 'homework', label: 'homework' },
-            { name: 'english', label: 'english' },
-            { name: 'math', label: 'math' },
-            { name: 'science', label: 'science' },
-            { name: 'language', label: 'language' },
+            { name: 'cafe-chat', label: 'cafe chat' },
+            { name: 'study-nook', label: 'study nook' },
+            { name: 'book-club', label: 'book club' },
+            { name: 'games-room', label: 'games room' },
+            { name: 'general-discussions', label: 'general discussions' },
+            { name: 'tech-talk', label: 'tech talk' },
+            { name: 'art-zone', label: 'art zone' },
           ];
 
           // scroll to the bottom of the messages div
@@ -731,6 +760,8 @@
                     customThemeAccentColor: customThemeAccentColor,
                     customUIBgColor: customUIBgColor,
                     customUITextColor: customUITextColor,
+                    customUISecondaryTextColor: customUISecondaryTextColor, // NEW: Secondary text color
+                    customUISecondaryBgColor: customUISecondaryBgColor, // NEW: Secondary UI background color
                     customMainBgType: customMainBgType,
                     customMainBgValue: customMainBgValue,
                     customThemePresets: customThemePresets, // Save presets
@@ -750,6 +781,7 @@
               profileDecorationUrl, profileDecorationSize, myBubbleBgColor, myBubbleTextColor, bio,
               profileBgFromColor, profileBgToColor, profileBanner, profileTextColorProfile, profileBannerType,
               currentThemeName, customThemeAccentColor, customUIBgColor, customUITextColor,
+              customUISecondaryTextColor, customUISecondaryBgColor, // NEW dependencies
               customMainBgType, customMainBgValue, customThemePresets, recentRooms, showOthersBubbleColors
           ]);
 
@@ -800,7 +832,9 @@
                     setCustomThemeAccentColor(profileData.customThemeAccentColor || '#8b5cf6');
                     setCustomUIBgColor(profileData.customUIBgColor || '#ffffff');
                     setCustomUITextColor(profileData.customUITextColor || '#000000');
-                    setCustomMainBgType(profileData.customMainBgType || 'color');
+                    setCustomUISecondaryTextColor(profileData.customUISecondaryTextColor || '#71717a'); // NEW
+                    setCustomUISecondaryBgColor(profileData.customUISecondaryBgColor || '#e7e5e4'); // NEW
+                    customMainBgType(profileData.customMainBgType || 'color');
                     setCustomMainBgValue(profileData.customMainBgValue || '#FFFFFF');
                     setCustomThemePresets(profileData.customThemePresets || { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
                     setShowOthersBubbleColors(profileData.showOthersBubbleColors !== undefined ? profileData.showOthersBubbleColors : true); // Default to true
@@ -850,6 +884,8 @@
                 setCustomThemeAccentColor('#8b5cf6');
                 setCustomUIBgColor('#ffffff');
                 setCustomUITextColor('#000000');
+                setCustomUISecondaryTextColor('#71717a'); // NEW
+                setCustomUISecondaryBgColor('#e7e5e4'); // NEW
                 setCustomMainBgType('color');
                 setCustomMainBgValue('#FFFFFF');
                 setCustomThemePresets({ slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
@@ -876,6 +912,7 @@
               profileDecorationUrl, profileDecorationSize, myBubbleBgColor, myBubbleTextColor, bio,
               profileBgFromColor, profileBgToColor, profileBanner, profileTextColorProfile, profileBannerType,
               currentThemeName, customThemeAccentColor, customUIBgColor, customUITextColor,
+              customUISecondaryTextColor, customUISecondaryBgColor, // NEW dependencies
               customMainBgType, customMainBgValue, customThemePresets, recentRooms, showOthersBubbleColors,
               saveUserSettingsToFirestore // Include the memoized save function
           ]);
@@ -1219,6 +1256,8 @@
                 // NEW: Initialize custom UI theme settings
                 customUIBgColor: '#ffffff',
                 customUITextColor: '#000000',
+                customUISecondaryTextColor: '#71717a', // NEW
+                customUISecondaryBgColor: '#e7e5e4', // NEW
                 customMainBgType: 'color',
                 customMainBgValue: '#FFFFFF',
                 // FIX START - Initialize new settings
@@ -1270,6 +1309,8 @@
               localStorage.setItem('chat_profile_banner_type', 'color');
               localStorage.setItem('chat_custom_ui_bg_color', '#ffffff');
               localStorage.setItem('chat_custom_ui_text_color', '#000000');
+              localStorage.setItem('chat_custom_ui_secondary_text_color', '#71717a'); // NEW
+              localStorage.setItem('chat_custom_ui_secondary_bg_color', '#e7e5e4'); // NEW
               localStorage.setItem('chat_custom_main_bg_type', 'color');
               localStorage.setItem('chat_custom_main_bg_value', '#FFFFFF');
               localStorage.setItem('chat_theme', 'default');
@@ -1346,6 +1387,8 @@
                             createdAt: serverTimestamp(),
                             customUIBgColor: '#ffffff',
                             customUITextColor: '#000000',
+                            customUISecondaryTextColor: '#71717a', // NEW
+                            customUISecondaryBgColor: '#e7e5e4', // NEW
                             customMainBgType: 'color',
                             customMainBgValue: '#FFFFFF',
                             // FIX START - Initialize new settings for new profiles
@@ -1390,6 +1433,8 @@
                 setCustomThemeAccentColor(profileData.customThemeAccentColor || '#8b5cf6');
                 setCustomUIBgColor(profileData.customUIBgColor || '#ffffff');
                 setCustomUITextColor(profileData.customUITextColor || '#000000');
+                setCustomUISecondaryTextColor(profileData.customUISecondaryTextColor || '#71717a'); // NEW
+                setCustomUISecondaryBgColor(profileData.customUISecondaryBgColor || '#e7e5e4'); // NEW
                 setCustomMainBgType(profileData.customMainBgType || 'color');
                 setCustomMainBgValue(profileData.customMainBgValue || '#FFFFFF');
                 setCustomThemePresets(profileData.customThemePresets || { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
@@ -1596,6 +1641,8 @@
               localStorage.removeItem('chat_profile_banner_type');
               localStorage.removeItem('chat_custom_ui_bg_color');
               localStorage.removeItem('chat_custom_ui_text_color');
+              localStorage.removeItem('chat_custom_ui_secondary_text_color'); // NEW
+              localStorage.removeItem('chat_custom_ui_secondary_bg_color'); // NEW
               localStorage.removeItem('chat_custom_main_bg_type');
               localStorage.removeItem('chat_custom_main_bg_value');
               localStorage.removeItem('chat_theme'); // Clear theme from local storage as well
@@ -1693,6 +1740,8 @@
                     // NEW: Save new custom UI theme settings to profile
                     customUIBgColor: customUIBgColor,
                     customUITextColor: customUITextColor,
+                    customUISecondaryTextColor: customUISecondaryTextColor, // NEW
+                    customUISecondaryBgColor: customUISecondaryBgColor, // NEW
                     customMainBgType: customMainBgType,
                     customMainBgValue: customMainBgValue,
                     // FIX START - Save new settings to Firestore during profile update
@@ -1720,6 +1769,8 @@
                 localStorage.setItem('chat_profile_banner_type', profileBannerType);
                 localStorage.setItem('chat_custom_ui_bg_color', customUIBgColor);
                 localStorage.setItem('chat_custom_ui_text_color', customUITextColor);
+                localStorage.setItem('chat_custom_ui_secondary_text_color', customUISecondaryTextColor); // NEW
+                localStorage.setItem('chat_custom_ui_secondary_bg_color', customUISecondaryBgColor); // NEW
                 localStorage.setItem('chat_custom_main_bg_type', customMainBgType);
                 localStorage.setItem('chat_custom_main_bg_value', customMainBgValue);
                 localStorage.setItem('chat_theme', currentThemeName);
@@ -1892,10 +1943,21 @@
               setCustomUIBgColor(newColor);
               // saveUserSettingsToFirestore() will be triggered by useEffect
           };
-          // NEW: Handler for custom UI text color change
+          // NEW: Handler for custom UI secondary background color (for buttons)
+          const handleCustomUISecondaryBgColorChange = (e) => {
+              const newColor = e.target.value;
+              setCustomUISecondaryBgColor(newColor);
+          };
+          // NEW: Handler for custom UI primary text color change
           const handleCustomUITextColorChange = (e) => {
               const newColor = e.target.value;
               setCustomUITextColor(newColor);
+              // saveUserSettingsToFirestore() will be triggered by useEffect
+          };
+          // NEW: Handler for custom UI secondary text color change
+          const handleCustomUISecondaryTextColorChange = (e) => {
+              const newColor = e.target.value;
+              setCustomUISecondaryTextColor(newColor);
               // saveUserSettingsToFirestore() will be triggered by useEffect
           };
           // NEW: Handler for custom main background type change
@@ -1917,6 +1979,8 @@
                 customThemeAccentColor,
                 customUIBgColor,
                 customUITextColor,
+                customUISecondaryTextColor, // NEW
+                customUISecondaryBgColor, // NEW
                 customMainBgType,
                 customMainBgValue,
                 myBubbleBgColor,
@@ -1941,6 +2005,8 @@
                 setCustomThemeAccentColor(preset.customThemeAccentColor);
                 setCustomUIBgColor(preset.customUIBgColor);
                 setCustomUITextColor(preset.customUITextColor);
+                setCustomUISecondaryTextColor(preset.customUISecondaryTextColor); // NEW
+                setCustomUISecondaryBgColor(preset.customUISecondaryBgColor); // NEW
                 setCustomMainBgType(preset.customMainBgType);
                 setCustomMainBgValue(preset.customMainBgValue);
                 setMyBubbleBgColor(preset.myBubbleBgColor);
@@ -2191,7 +2257,7 @@
             if (typingUsers.length === 0) return null;
             if (typingUsers.length === 1) {
               return (
-                <span className="flex items-center text-sm italic lowercase">
+                <span className="flex items-center text-sm italic lowercase" style={{color: currentTheme.secondaryText}}>
                     <img src={typingUsers[0].profilePictureUrl || 'https://placehold.co/16x16/cccccc/ffffff?text=P'} alt="PFP" className="w-4 h-4 rounded-full mr-2 object-cover" />
                     {typingUsers[0].displayName} is typing...
                 </span>
@@ -2199,7 +2265,7 @@
             }
             if (typingUsers.length === 2) {
               return (
-                <span className="flex items-center text-sm italic lowercase">
+                <span className="flex items-center text-sm italic lowercase" style={{color: currentTheme.secondaryText}}>
                     <img src={typingUsers[0].profilePictureUrl || 'https://placehold.co/16x16/cccccc/ffffff?text=P'} alt="PFP" className="w-4 h-4 rounded-full mr-1 object-cover" />
                     <img src={typingUsers[1].profilePictureUrl || 'https://placehold.co/16x16/cccccc/ffffff?text=P'} alt="PFP" className="w-4 h-4 rounded-full mr-2 object-cover" />
                     {typingUsers[0].displayName} and {typingUsers[1].displayName} are typing...
@@ -2210,7 +2276,7 @@
                 const firstTwo = typingUsers.slice(0, 2);
                 const remainingCount = typingUsers.length - 2;
                 return (
-                    <span className="flex items-center text-sm italic lowercase">
+                    <span className="flex items-center text-sm italic lowercase" style={{color: currentTheme.secondaryText}}>
                         {firstTwo.map((user, index) => (
                             <img key={index} src={user.profilePictureUrl || 'https://placehold.co/16x16/cccccc/ffffff?text=P'} alt="PFP" className="w-4 h-4 rounded-full mr-1 object-cover" />
                         ))}
@@ -2219,7 +2285,7 @@
                 );
             }
             return null; // Should not happen
-          }, [typingUsers]);
+          }, [typingUsers, currentTheme.secondaryText]);
 
 
           // Logging for overall App render conditions
@@ -2299,7 +2365,7 @@
                     />
                     <button
                       type="submit"
-                      className={`w-full ${currentTheme.buttonPrimaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                      className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                     >
                       log in
                     </button>
@@ -2347,7 +2413,7 @@
                     />
                     <button
                       type="submit"
-                      className={`w-full ${currentTheme.buttonSecondaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                      className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                     >
                       register
                     </button>
@@ -2393,7 +2459,7 @@
                       {isAdmin && (
                         <button
                           onClick={() => setShowAdminPanelModal(true)}
-                          className={`absolute top-4 right-36 ${currentTheme.buttonSecondaryBg} text-white p-3 rounded-full shadow-md ${currentTheme.buttonSecondaryHover} transition duration-300 z-10`}
+                          className={`absolute top-4 right-36 ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-full shadow-md ${currentTheme.buttonSecondaryHover} transition duration-300 z-10`}
                           title="Admin Panel"
                         >
                           <i className="fas fa-shield-alt text-xl"></i>
@@ -2405,7 +2471,7 @@
                         <button
                           onClick={() => { setCurrentView('chatrooms'); setActiveRoomCode(''); setMessages([]); }}
                           className={`px-4 py-2 rounded-lg font-semibold lowercase ${
-                            currentView === 'chatrooms' ? `${currentTheme.buttonPrimaryBg} text-white` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} hover:bg-stone-400`
+                            currentView === 'chatrooms' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} ${currentTheme.buttonTertiaryHover}`
                           } transition duration-200`}
                         >
                           chatrooms
@@ -2413,7 +2479,7 @@
                         <button
                           onClick={() => { setCurrentView('dms'); setActiveRoomCode(''); setMessages([]); }}
                           className={`px-4 py-2 rounded-lg font-semibold lowercase ${
-                            currentView === 'dms' ? `${currentTheme.buttonPrimaryBg} text-white` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} hover:bg-stone-400`
+                            currentView === 'dms' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} ${currentTheme.buttonTertiaryHover}`
                           } transition duration-200`}
                         >
                           dms
@@ -2458,13 +2524,13 @@
                               />
                               <button
                                 type="submit"
-                                className={`w-full ${currentTheme.buttonPrimaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                               >
                                 join custom room
                               </button>
                             </form>
                             {recentRooms.length > 0 && (
-                              <div className={`mt-8 pt-4 border-t ${currentTheme.inputBorder} max-h-[200px] overflow-y-auto ${currentTheme.scrollbar}`}>
+                              <div className={`mt-8 pt-4 border-t ${currentTheme.inputBorder} max-h-[150px] overflow-y-auto ${currentTheme.scrollbar}`}>
                                 <h3 className={`text-xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center`}>recently entered chats</h3>
                                 <div className={`space-y-2`}>
                                   {recentRooms.map((roomCode) => (
@@ -2543,7 +2609,7 @@
                           </button>
                           <button
                             onClick={() => { setActiveRoomCode(''); setMessages([]); setCurrentView('chatrooms'); }}
-                            className={`${currentTheme.buttonSecondaryBg} text-white px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                            className={`${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                           >
                             leave room
                           </button>
@@ -2607,7 +2673,7 @@
                         />
                         <button
                           type="submit"
-                          className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} text-white rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                          className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                         >
                           send
                         </button>
@@ -2641,7 +2707,7 @@
                         {isAdmin && (
                             <button
                                 onClick={() => setShowAdminPanelModal(true)}
-                                className={`absolute top-4 right-36 ${currentTheme.buttonSecondaryBg} text-white p-3 rounded-full shadow-md ${currentTheme.buttonSecondaryHover} transition duration-300 z-10`}
+                                className={`absolute top-4 right-36 ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-full shadow-md ${currentTheme.buttonSecondaryHover} transition duration-300 z-10`}
                                 title="Admin Panel"
                             >
                                 <i className="fas fa-shield-alt text-xl"></i>
@@ -2674,7 +2740,7 @@
                                     </button>
                                     <button
                                         onClick={() => { setActiveRoomCode(''); setMessages([]); setCurrentView('dms'); }}
-                                        className={`${currentTheme.buttonSecondaryBg} text-white px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                                        className={`${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                                     >
                                         leave dm
                                     </button>
@@ -2738,7 +2804,7 @@
                                 />
                                 <button
                                     type="submit"
-                                    className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} text-white rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                    className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                                 >
                                     send
                                 </button>
@@ -2940,14 +3006,14 @@
                                           <button
                                               type="button"
                                               onClick={() => setProfileBannerType('color')}
-                                              className={`px-3 py-1 rounded-full text-xs font-semibold ${profileBannerType === 'color' ? `${currentTheme.buttonPrimaryBg} text-white` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
+                                              className={`px-3 py-1 rounded-full text-xs font-semibold ${profileBannerType === 'color' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
                                           >
                                               color
                                           </button>
                                           <button
                                               type="button"
                                               onClick={() => setProfileBannerType('image')}
-                                              className={`px-3 py-1 rounded-full text-xs font-semibold ${profileBannerType === 'image' ? `${currentTheme.buttonPrimaryBg} text-white` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
+                                              className={`px-3 py-1 rounded-full text-xs font-semibold ${profileBannerType === 'image' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
                                           >
                                               image url
                                           </button>
@@ -2986,7 +3052,7 @@
 
                       <button
                         type="submit"
-                        className={`w-full max-w-sm ${currentTheme.buttonPrimaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                        className={`w-full max-w-sm ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                       >
                         save changes
                       </button>
@@ -3069,23 +3135,46 @@
                           <div className="mt-8 space-y-4">
                               <h3 className={`text-xl font-bold ${currentTheme.textColor} lowercase`}>customize your theme</h3>
                               <div>
-                                  <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui background color:</label>
+                                  <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui main background color:</label>
                                   <input
                                       type="color"
                                       value={customUIBgColor}
                                       onChange={handleCustomUIBgColorChange}
                                       className="w-full h-10 rounded-lg border-2 cursor-pointer"
-                                      title="Pick UI Background Color"
+                                      title="Pick UI Main Background Color"
                                   />
                               </div>
+                              {/* NEW: Secondary UI Background Color */}
                               <div>
-                                  <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui text color:</label>
+                                  <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui secondary background color (for buttons, etc.):</label>
+                                  <input
+                                      type="color"
+                                      value={customUISecondaryBgColor}
+                                      onChange={handleCustomUISecondaryBgColorChange}
+                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      title="Pick UI Secondary Background Color"
+                                  />
+                              </div>
+                              {/* NEW: Primary Text Color */}
+                              <div>
+                                  <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui primary text color:</label>
                                   <input
                                       type="color"
                                       value={customUITextColor}
                                       onChange={handleCustomUITextColorChange}
                                       className="w-full h-10 rounded-lg border-2 cursor-pointer"
-                                      title="Pick UI Text Color"
+                                      title="Pick UI Primary Text Color"
+                                  />
+                              </div>
+                              {/* NEW: Secondary Text Color */}
+                              <div>
+                                  <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>chat ui secondary text color:</label>
+                                  <input
+                                      type="color"
+                                      value={customUISecondaryTextColor}
+                                      onChange={handleCustomUISecondaryTextColorChange}
+                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      title="Pick UI Secondary Text Color"
                                   />
                               </div>
                               <div>
@@ -3094,14 +3183,14 @@
                                       <button
                                           type="button"
                                           onClick={() => handleCustomMainBgTypeChange('color')}
-                                          className={`px-3 py-1 rounded-full text-xs font-semibold ${customMainBgType === 'color' ? `${currentTheme.buttonPrimaryBg} text-white` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
+                                          className={`px-3 py-1 rounded-full text-xs font-semibold ${customMainBgType === 'color' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
                                       >
                                           color
                                       </button>
                                       <button
                                           type="button"
                                           onClick={() => handleCustomMainBgTypeChange('image')}
-                                          className={`px-3 py-1 rounded-full text-xs font-semibold ${customMainBgType === 'image' ? `${currentTheme.buttonPrimaryBg} text-white` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
+                                          className={`px-3 py-1 rounded-full text-xs font-semibold ${customMainBgType === 'image' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText}`} lowercase`}
                                       >
                                           image url
                                       </button>
@@ -3159,7 +3248,7 @@
                                     <button
                                         type="button"
                                         onClick={() => savePreset(slotKey, customThemePresets[slotKey].name)}
-                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} text-white p-2 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 lowercase`}
+                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-2 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 lowercase`}
                                     >
                                         save
                                     </button>
@@ -3341,7 +3430,7 @@
                                     {/* The "Save Decoration" button is now redundant because changes are debounced */}
                                     {/* <button
                                         onClick={handleSaveDecorationChanges}
-                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                                     >
                                         clear decoration
                                     </button> */}
@@ -3385,7 +3474,7 @@
                                     handleSendGlobalAnnouncement(textarea.value);
                                     textarea.value = '';
                                 }}
-                                className={`w-full ${currentTheme.buttonPrimaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                             >
                                 send announcement
                             </button>
@@ -3396,7 +3485,7 @@
 
                         <button
                             onClick={() => { setShowAdminPanelModal(false); setShowBanMenuModal(true); }}
-                            className={`w-full ${currentTheme.buttonSecondaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                            className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                         >
                             ban menu
                         </button>
@@ -3442,7 +3531,7 @@
                       </button>
                       <button
                         onClick={cancelClearAllMessages}
-                        className={`bg-stone-300 text-stone-800 px-6 py-3 rounded-lg font-semibold hover:bg-stone-400 transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3466,7 +3555,7 @@
                       </button>
                       <button
                         onClick={cancelKickBan}
-                        className={`bg-stone-300 text-stone-800 px-6 py-3 rounded-lg font-semibold hover:bg-stone-400 transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3490,7 +3579,7 @@
                       </button>
                       <button
                         onClick={cancelKickBan}
-                        className={`bg-stone-300 text-stone-800 px-6 py-3 rounded-lg font-semibold hover:bg-stone-400 transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3528,7 +3617,7 @@
                       </button>
                       <button
                         onClick={cancelRevertBan}
-                        className={`bg-stone-300 text-stone-800 px-6 py-3 rounded-lg font-semibold hover:bg-stone-400 transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3721,14 +3810,14 @@
                                         {isFriend ? (
                                             <button
                                                 onClick={handleOpenDmClick}
-                                                className={`w-full ${currentTheme.buttonPrimaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                                             >
                                                 send direct message
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={handleAddFriendClick}
-                                                className={`w-full ${currentTheme.buttonSecondaryBg} text-white p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                                                className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                                             >
                                                 add friend
                                             </button>
