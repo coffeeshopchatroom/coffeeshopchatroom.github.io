@@ -2347,7 +2347,7 @@
 
               {/* login modal */}
               {(!isLoggedIn || showLoginModal) && !showRegisterModal && (
-                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md h-[70vh] flex flex-col text-center overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
+                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
                   <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>welcome back!</h2>
                   <form onSubmit={handleLogin} className="space-y-4"> {/* Fixed: Added closing double quote to className */}
                     <input
@@ -3372,7 +3372,7 @@
               {/* Admin Panel Modal */}
               {showAdminPanelModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                  <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
+                  <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md h-[70vh] flex flex-col text-center overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                     <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>admin panel</h2>
                     <div className="space-y-4">
                         <label className="flex items-center justify-between cursor-pointer">
