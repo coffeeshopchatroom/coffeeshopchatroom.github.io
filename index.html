@@ -2347,7 +2347,7 @@
 
               {/* login modal */}
               {(!isLoggedIn || showLoginModal) && !showRegisterModal && (
-                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
+                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md h-[70vh] flex flex-col text-center overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                   <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>welcome back!</h2>
                   <form onSubmit={handleLogin} className="space-y-4"> {/* Fixed: Added closing double quote to className */}
                     <input
