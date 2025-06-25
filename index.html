@@ -419,7 +419,7 @@
                                 onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'} // Fallback PFP
                                 onClick={() => onOpenUserProfile(msg.senderId)}
                             />
-                            {msg.senderProfileDecorationUrl && (
+                            {profileDecorationUrl && (
                                 <img
                                     src={profileDecorationUrl}
                                     alt="Decoration"
@@ -555,6 +555,13 @@
           // NEW: State for Remember Me checkbox
           const [rememberMe, setRememberMe] = React.useState(localStorage.getItem('chat_remember_me') === 'true');
 
+          <!-- NEW: Screensaver Feature - START -->
+          // NEW: Screensaver states
+          const [showScreensaver, setShowScreensaver] = React.useState(false);
+          const idleTimeoutRef = React.useRef(null);
+          const screensaverIntervalRef = React.useRef(null);
+          const [lastActivityTime, setLastActivityTime] = React.useState(Date.now());
+          <!-- NEW: Screensaver Feature - END -->
 
           // Define themes
           const themes = {
@@ -1068,6 +1075,78 @@
             return () => unsubscribe();
           }, [isAuthReady, db, appId]);
 
+          <!-- NEW: Screensaver Feature - START -->
+          // NEW: Idle Timeout Effect
+          React.useEffect(() => {
+              if (!isLoggedIn) {
+                  // Clear any active idle timers if user logs out
+                  if (idleTimeoutRef.current) {
+                      clearTimeout(idleTimeoutRef.current);
+                      idleTimeoutRef.current = null;
+                  }
+                  return;
+              }
+
+              const idleTimeLimit = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+              const resetIdleTimer = () => {
+                  setLastActivityTime(Date.now());
+                  if (idleTimeoutRef.current) {
+                      clearTimeout(idleTimeoutRef.current);
+                  }
+                  idleTimeoutRef.current = setTimeout(() => {
+                      console.log("Idle for 5 minutes, activating screensaver.");
+                      setShowScreensaver(true);
+                  }, idleTimeLimit);
+              };
+
+              // Attach event listeners for user activity
+              document.addEventListener('mousemove', resetIdleTimer);
+              document.addEventListener('mousedown', resetIdleTimer);
+              document.addEventListener('keydown', resetIdleTimer);
+              document.addEventListener('scroll', resetIdleTimer);
+              document.addEventListener('touchstart', resetIdleTimer);
+
+              // Initial setup of the timer
+              resetIdleTimer();
+
+              // Cleanup function
+              return () => {
+                  if (idleTimeoutRef.current) {
+                      clearTimeout(idleTimeoutRef.current);
+                  }
+                  document.removeEventListener('mousemove', resetIdleTimer);
+                  document.removeEventListener('mousedown', resetIdleTimer);
+                  document.removeEventListener('keydown', resetIdleTimer);
+                  document.removeEventListener('scroll', resetIdleTimer);
+                  document.removeEventListener('touchstart', resetIdleTimer);
+              };
+          }, [isLoggedIn]); // Dependency on isLoggedIn to activate/deactivate idle checks
+
+          // NEW: Screensaver Clock Update Effect
+          React.useEffect(() => {
+              if (showScreensaver) {
+                  // Update clock every second
+                  screensaverIntervalRef.current = setInterval(() => {
+                      // No state update needed here directly, as the ScreensaverDisplay
+                      // component will handle its own time rendering
+                      // (This effect mainly ensures the screensaver is 'active' and prevents other updates)
+                  }, 1000);
+              } else {
+                  // Clear the interval when screensaver is off
+                  if (screensaverIntervalRef.current) {
+                      clearInterval(screensaverIntervalRef.current);
+                  }
+              }
+
+              return () => {
+                  if (screensaverIntervalRef.current) {
+                      clearInterval(screensaverIntervalRef.current);
+                  }
+              };
+          }, [showScreensaver]);
+          <!-- NEW: Screensaver Feature - END -->
+
           // Effect to listen for friends list changes
           React.useEffect(() => {
             if (!isAuthReady || !userId || !isLoggedIn) return;
@@ -1486,14 +1565,14 @@
             }
           };
 
-          const handleJoinRoom = async (e, roomCode) => {
+          const handleJoinRoom = async (e) => {
             if (e && e.preventDefault) {
               e.preventDefault();
             }
             setErrorMessage('');
             setSuccessMessage('');
 
-            const codeToJoin = roomCode;
+            const codeToJoin = joinRoomCode; // Use the state variable directly
 
             if (!codeToJoin) {
               setErrorMessage('please enter a room code.');
@@ -1694,6 +1773,28 @@
                 }, 3000); // 3 seconds debounce
             }
           };
+
+          <!-- NEW: Screensaver Feature - START -->
+          // NEW: Screensaver Handlers
+          const handleActivateScreensaver = () => {
+              setShowScreensaver(true);
+              // Clear the idle timeout immediately when activating manually
+              if (idleTimeoutRef.current) {
+                  clearTimeout(idleTimeoutRef.current);
+                  idleTimeoutRef.current = null;
+              }
+          };
+
+          const handleDeactivateScreensaver = React.useCallback(() => {
+              setShowScreensaver(false);
+              setLastActivityTime(Date.now()); // Reset activity time immediately
+              // Reset the idle timer when screensaver is deactivated
+              if (idleTimeoutRef.current) {
+                  clearTimeout(idleTimeoutRef.current);
+              }
+              idleTimeoutRef.current = setTimeout(handleActivateScreensaver, 5 * 60 * 1000); // 5 minutes idle
+          }, []);
+          <!-- NEW: Screensaver Feature - END -->
 
           const handleUpdateProfile = async (e) => {
             e.preventDefault();
@@ -2325,128 +2426,10 @@
                 </div>
               )}
 
-              {/* NEW: Global Announcement Display */}
-              {globalAnnouncement && showGlobalAnnouncement && (
-                <div className="w-full max-w-4xl bg-yellow-200 text-yellow-900 p-3 rounded-lg shadow-md mb-6 flex items-start justify-between">
-                    <p className="font-semibold text-sm lowercase">
-                        <span className="font-bold uppercase mr-2">[announcement by {globalAnnouncement.senderDisplayName || 'admin'}]</span>
-                        {globalAnnouncement.text}
-                    </p>
-                    <button onClick={dismissGlobalAnnouncement} className="ml-4 font-bold text-lg leading-none text-yellow-800">&times;</button>
-                </div>
-              )}
-
-              {/* main title */}
-              <h1 className={`text-5xl font-extrabold mb-8 ${currentTheme.textColor} lowercase text-center`}>coffee shop chatrooms</h1>
-
-              {/* Display current User ID for debugging/identification */}
-              {userId && (
-                <p className={`text-sm ${currentTheme.secondaryText} mb-4 lowercase`}>your user id: <span className="font-mono">{userId}</span></p>
-              )}
-
-
-              {/* login modal */}
-              {(!isLoggedIn || showLoginModal) && !showRegisterModal && (
-                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
-                  <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>welcome back!</h2>
-                  <form onSubmit={handleLogin} className="space-y-4"> {/* Fixed: Added closing double quote to className */}
-                    <input
-                      type="email" // Changed to email type
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="email"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
-                      required
-                    />
-                    <input
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="password"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
-                      required
-                    />
-                    {/* NEW: Remember Me checkbox */}
-                    <div className="flex items-center justify-start mt-2">
-                        <input
-                            type="checkbox"
-                            id="rememberMe"
-                            checked={rememberMe}
-                            onChange={(e) => setRememberMe(e.target.checked)}
-                            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="rememberMe" className={`${currentTheme.secondaryText} text-sm lowercase`}>remember me</label>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
-                    >
-                      log in
-                    </button>
-                  </form>
-                  <p className={`mt-6 ${currentTheme.secondaryText} lowercase`}>
-                    don't have an account?{' '}
-                    <button
-                      onClick={() => { setShowRegisterModal(true); setShowLoginModal(false); setErrorMessage(''); setSuccessMessage(''); }}
-                      className={`${currentTheme.secondaryText} hover:underline font-medium`}
-                    >
-                      register here
-                    </button>
-                  </p>
-                </div>
-              )}
-
-              {/* register modal */}
-              {showRegisterModal && (
-                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
-                  <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>create account</h2>
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <input
-                      type="email" // Changed to email type
-                      value={registerEmail}
-                      onChange={(e) => setRegisterEmail(e.target.value)}
-                      placeholder="choose email"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
-                      required
-                    />
-                    <input
-                      type="password"
-                      value={registerPassword}
-                      onChange={(e) => setRegisterPassword(e.target.value)}
-                      placeholder="choose password"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
-                      required
-                    />
-                    <input
-                      type="text" // New field for display name
-                      value={registerDisplayName}
-                      onChange={(e) => setRegisterDisplayName(e.target.value)}
-                      placeholder="choose display name (e.g. 'CoffeeLover')"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
-                      required
-                    />
-                    <button
-                      type="submit"
-                      className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
-                    >
-                      register
-                    </button>
-                  </form>
-                  <p className={`mt-6 ${currentTheme.secondaryText} lowercase`}>
-                    already have an account?{' '}
-                    <button
-                      onClick={() => { setShowRegisterModal(false); setShowLoginModal(true); setErrorMessage(''); setSuccessMessage(''); }}
-                      className={`${currentTheme.secondaryText} hover:underline font-medium`}
-                    >
-                      log in
-                    </button>
-                  </p>
-                </div>
-              )}
-
-              {/* Main chat UI: Conditional rendering based on activeRoomCode and isDMActive */}
-              {isLoggedIn && (
+              <!-- NEW: Screensaver Feature - START -->
+              {/* Conditionally render main UI or Screensaver */}
+              {!showScreensaver && isLoggedIn && (
+              <!-- NEW: Screensaver Feature - END -->
                 <>
                   {/* Initial Room/DM Selection UI */}
                   {!activeRoomCode && (
@@ -2847,7 +2830,20 @@
                         </div>
                     </div>
                   )}
+                <!-- NEW: Screensaver Feature - START -->
                 </>
+              )}
+              <!-- NEW: Screensaver Feature - END -->
+
+              {/* NEW: Global Announcement Display */}
+              {globalAnnouncement && showGlobalAnnouncement && (
+                <div className="w-full max-w-4xl bg-yellow-200 text-yellow-900 p-3 rounded-lg shadow-md mb-6 flex items-start justify-between">
+                    <p className="font-semibold text-sm lowercase">
+                        <span className="font-bold uppercase mr-2">[announcement by {globalAnnouncement.senderDisplayName || 'admin'}]</span>
+                        {globalAnnouncement.text}
+                    </p>
+                    <button onClick={dismissGlobalAnnouncement} className="ml-4 font-bold text-lg leading-none text-yellow-800">&times;</button>
+                </div>
               )}
 
               {/* profile settings modal (FULL SCREEN) */}
@@ -3254,7 +3250,7 @@
                                               'https://cdn.prod.website-files.com/62d84e447b4f9e7263d31e94/655f6a3627d3fcad6f5c8e60_copy-image-address.jpg'
                                           )}
                                           className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
-                                      >
+                                          >
                                           <i className="fas fa-info-circle text-lg"></i>
                                       </button>
                                     </div>
@@ -3697,6 +3693,19 @@
                   changelog
               </button>
 
+              <!-- NEW: Screensaver Feature - START -->
+              {/* NEW: Screensaver Button */}
+              {isLoggedIn && ( // Only show screensaver button if user is logged in
+                  <button
+                      onClick={handleActivateScreensaver}
+                      className={`fixed bottom-4 right-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
+                      title="Activate Screensaver"
+                  >
+                      screensaver
+                  </button>
+              )}
+              <!-- NEW: Screensaver Feature - END -->
+
               {/* NEW: Changelog Modal */}
               {showChangelogModal && (
                   <ChangelogModal
@@ -3704,6 +3713,16 @@
                       onClose={() => setShowChangelogModal(false)}
                   />
               )}
+
+              <!-- NEW: Screensaver Feature - START -->
+              {/* NEW: Screensaver Display */}
+              {showScreensaver && (
+                  <ScreensaverDisplay
+                      currentTheme={currentTheme}
+                      onDeactivate={handleDeactivateScreensaver}
+                  />
+              )}
+              <!-- NEW: Screensaver Feature - END -->
 
               {/* "made by" text at the bottom */}
               <p className={`mt-8 ${currentTheme.secondaryText} text-xs lowercase`}>made by oliver</p>
