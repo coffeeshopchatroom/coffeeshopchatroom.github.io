@@ -419,7 +419,7 @@
                                 onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'} // Fallback PFP
                                 onClick={() => onOpenUserProfile(msg.senderId)}
                             />
-                            {profileDecorationUrl && (
+                            {msg.senderProfileDecorationUrl && (
                                 <img
                                     src={profileDecorationUrl}
                                     alt="Decoration"
@@ -1565,14 +1565,14 @@
             }
           };
 
-          const handleJoinRoom = async (e) => {
+          const handleJoinRoom = async (e, roomCode) => {
             if (e && e.preventDefault) {
               e.preventDefault();
             }
             setErrorMessage('');
             setSuccessMessage('');
 
-            const codeToJoin = joinRoomCode; // Use the state variable directly
+            const codeToJoin = roomCode;
 
             if (!codeToJoin) {
               setErrorMessage('please enter a room code.');
@@ -2425,6 +2425,128 @@
                   <button onClick={() => setSuccessMessage('')} className="ml-4 font-bold text-lg leading-none">&times;</button>
                 </div>
               )}
+ {/* NEW: Global Announcement Display */}
+              {globalAnnouncement && showGlobalAnnouncement && (
+                <div className="w-full max-w-4xl bg-yellow-200 text-yellow-900 p-3 rounded-lg shadow-md mb-6 flex items-start justify-between">
+                    <p className="font-semibold text-sm lowercase">
+                        <span className="font-bold uppercase mr-2">[announcement by {globalAnnouncement.senderDisplayName || 'admin'}]</span>
+                        {globalAnnouncement.text}
+                    </p>
+                    <button onClick={dismissGlobalAnnouncement} className="ml-4 font-bold text-lg leading-none text-yellow-800">&times;</button>
+                </div>
+              )}
+
+              {/* main title */}
+              <h1 className={`text-5xl font-extrabold mb-8 ${currentTheme.textColor} lowercase text-center`}>coffee shop chatrooms</h1>
+
+              {/* Display current User ID for debugging/identification */}
+              {userId && (
+                <p className={`text-sm ${currentTheme.secondaryText} mb-4 lowercase`}>your user id: <span className="font-mono">{userId}</span></p>
+              )}
+
+
+              {/* login modal */}
+              {(!isLoggedIn || showLoginModal) && !showRegisterModal && (
+                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
+                  <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>welcome back!</h2>
+                  <form onSubmit={handleLogin} className="space-y-4"> {/* Fixed: Added closing double quote to className */}
+                    <input
+                      type="email" // Changed to email type
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="email"
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      required
+                    />
+                    <input
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="password"
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      required
+                    />
+                    {/* NEW: Remember Me checkbox */}
+                    <div className="flex items-center justify-start mt-2">
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="rememberMe" className={`${currentTheme.secondaryText} text-sm lowercase`}>remember me</label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                    >
+                      log in
+                    </button>
+                  </form>
+                  <p className={`mt-6 ${currentTheme.secondaryText} lowercase`}>
+                    don't have an account?{' '}
+                    <button
+                      onClick={() => { setShowRegisterModal(true); setShowLoginModal(false); setErrorMessage(''); setSuccessMessage(''); }}
+                      className={`${currentTheme.secondaryText} hover:underline font-medium`}
+                    >
+                      register here
+                    </button>
+                  </p>
+                </div>
+              )}
+
+              {/* register modal */}
+              {showRegisterModal && (
+                <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
+                  <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>create account</h2>
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <input
+                      type="email" // Changed to email type
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
+                      placeholder="choose email"
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      required
+                    />
+                    <input
+                      type="password"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      placeholder="choose password"
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      required
+                    />
+                    <input
+                      type="text" // New field for display name
+                      value={registerDisplayName}
+                      onChange={(e) => setRegisterDisplayName(e.target.value)}
+                      placeholder="choose display name (e.g. 'CoffeeLover')"
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                    >
+                      register
+                    </button>
+                  </form>
+                  <p className={`mt-6 ${currentTheme.secondaryText} lowercase`}>
+                    already have an account?{' '}
+                    <button
+                      onClick={() => { setShowRegisterModal(false); setShowLoginModal(true); setErrorMessage(''); setSuccessMessage(''); }}
+                      className={`${currentTheme.secondaryText} hover:underline font-medium`}
+                    >
+                      log in
+                    </button>
+                  </p>
+                </div>
+              )}
+
+              {/* Main chat UI: Conditional rendering based on activeRoomCode and isDMActive */}
+              {isLoggedIn && (
 
               <!-- NEW: Screensaver Feature - START -->
               {/* Conditionally render main UI or Screensaver */}
@@ -3129,7 +3251,7 @@
                       ...(currentTheme.mainBgColorStyle ? { backgroundColor: currentTheme.mainBgColorStyle } : {}),
                       ...currentTheme.mainBgImageStyle
                   }}
-                >
+            >
                   <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full h-full max-w-md text-center overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                     <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>chat settings</h2>
                     <div className="space-y-4">
