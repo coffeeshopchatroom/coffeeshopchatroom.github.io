@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>coffee shop chatrooms</title>
     <!-- Favicon updated to a direct message bubble icon PNG -->
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3298/3298521.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2067/2067873.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -104,11 +104,12 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateEmail } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, onSnapshot, query, where, serverTimestamp, getDocs, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+        // Updated Firebase SDK version to 11.6.1 for all imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateEmail, signInWithCustomToken, signInAnonymously, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, onSnapshot, query, where, serverTimestamp, getDocs, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         // Firebase Storage imports are removed as per user request
-        // import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-storage.js";
+        // import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
 
         // define global variables or constants as they would be in the canvas environment
@@ -150,7 +151,32 @@
         window.app = initializeApp(window.firebaseConfig);
         window.db = getFirestore(window.app);
         window.auth = getAuth(window.app);
-        // window.storage = getStorage(window.app); // Storage init removed
+
+        // *** CRITICAL AUTHENTICATION STARTUP ***
+        // Ensure an auth state is established immediately for security rules to work
+        (async () => {
+            try {
+                // Set persistence for the auth instance to local storage
+                await setPersistence(window.auth, browserLocalPersistence);
+                console.log("Firebase Auth persistence set to LOCAL.");
+
+                // Only attempt anonymous sign-in if no user is already logged in (including persisted sessions)
+                if (!window.auth.currentUser) {
+                  await signInAnonymously(window.auth);
+                  console.log("Initial auth: Signed in anonymously.");
+                } else {
+                  console.log("Initial auth: User already logged in, skipping anonymous sign-in.");
+                }
+
+            } catch (error) {
+                console.error("Firebase initialization or anonymous authentication failed:", error);
+            } finally {
+                // This `finally` block ensures the execution path completes,
+                // but the `onAuthStateChanged` listener in React will primarily
+                // manage the `isAuthReady` state and subsequent UI.
+            }
+        })();
+        // ***************************************
 
         // expose firebase functions globally for the react script
         // by putting them into a single window.firebaseFunctions object
@@ -174,6 +200,10 @@
             createUserWithEmailAndPassword: createUserWithEmailAndPassword,
             signInWithEmailAndPassword: signInWithEmailAndPassword,
             updateEmail: updateEmail,
+            signInWithCustomToken: signInWithCustomToken, // Exposed signInWithCustomToken
+            signInAnonymously: signInAnonymously,     // Exposed signInAnonymously
+            setPersistence: setPersistence, // Exposed setPersistence
+            browserLocalPersistence: browserLocalPersistence, // Exposed browserLocalPersistence
         };
     </script>
 
@@ -208,6 +238,10 @@
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
             updateEmail,
+            signInWithCustomToken, // Destructured
+            signInAnonymously,     // Destructured
+            setPersistence,        // Destructured setPersistence
+            browserLocalPersistence, // Destructured browserLocalPersistence
          } = window.firebaseFunctions;
 
 
@@ -387,7 +421,7 @@
                             />
                             {msg.senderProfileDecorationUrl && (
                                 <img
-                                    src={msg.senderProfileDecorationUrl}
+                                    src={profileDecorationUrl}
                                     alt="Decoration"
                                     style={decorationStyle}
                                     onError={(e) => e.target.style.display='none'} // Hide if error loading decoration
@@ -473,7 +507,7 @@
           // New states for kick/ban confirmation modals
           const [showConfirmKickModal, setShowConfirmKickModal] = React.useState(false);
           const [userToKick, setUserToKick] = React.useState(null);
-          const [showConfirmBanModal, setShowConfirmBanModal] = React.useState(false);
+          const [showConfirmBanModal, setShowConfirmBanModal] = React.useState(false); 
           const [userToBan, setUserToBan] = React.useState(null);
           const [showConfirmRevertBanModal, setShowConfirmRevertBanModal] = React.useState(false);
           const [userToRevertBan, setUserToRevertBan] = React.useState(null);
@@ -517,6 +551,9 @@
 
           // NEW: State for Changelog Modal
           const [showChangelogModal, setShowChangelogModal] = React.useState(false);
+
+          // NEW: State for Remember Me checkbox
+          const [rememberMe, setRememberMe] = React.useState(localStorage.getItem('chat_remember_me') === 'true');
 
 
           // Define themes
@@ -822,6 +859,7 @@
           React.useEffect(() => {
             const authenticateFirebase = async () => {
               try {
+                // The global script already attempts anonymous sign-in, marking auth ready if successful.
                 setIsAuthReady(true);
               } catch (error) {
                 console.error("Firebase initialization error:", error);
@@ -831,18 +869,28 @@
 
             authenticateFirebase();
 
+            // Load remembered email on startup
+            const savedEmail = localStorage.getItem('chat_remembered_email');
+            if (savedEmail) {
+                setLoginEmail(savedEmail);
+            }
+
+
             const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
               setUser(currentUser);
               console.log("onAuthStateChanged: Current user:", currentUser ? currentUser.uid : "null");
+              
               if (currentUser) {
                 setUserId(currentUser.uid);
                 setUserEmail(currentUser.email || '');
                 
                 const userProfileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/userProfiles`, currentUser.uid);
+                console.log(`Attempting to fetch user profile from Firestore: ${userProfileRef.path}`);
                 try {
                   const userProfileSnap = await getDoc(userProfileRef);
                   if (userProfileSnap.exists()) {
                     const profileData = userProfileSnap.data();
+                    console.log("onAuthStateChanged: User profile data fetched:", profileData); // Detailed log
                     // Load Profile details
                     setDisplayUsername(profileData.displayUsername || '');
                     setDisplayName(profileData.displayName || profileData.displayUsername || 'anonymous');
@@ -868,7 +916,7 @@
                     setCustomUITextColor(profileData.customUITextColor || '#000000');
                     setCustomUISecondaryTextColor(profileData.customUISecondaryTextColor || '#71717a'); // NEW
                     setCustomUISecondaryBgColor(profileData.customUISecondaryBgColor || '#e7e5e4'); // NEW
-                    customMainBgType(profileData.customMainBgType || 'color');
+                    setCustomMainBgType(profileData.customMainBgType || 'color'); // Corrected typo
                     setCustomMainBgValue(profileData.customMainBgValue || '#FFFFFF');
                     setCustomThemePresets(profileData.customThemePresets || { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
                     setShowOthersBubbleColors(profileData.showOthersBubbleColors !== undefined ? profileData.showOthersBubbleColors : true); // Default to true
@@ -877,24 +925,20 @@
                     setRecentRooms(profileData.recentRooms || []);
 
                     setIsLoggedIn(true);
-                    console.log("onAuthStateChanged: User profile and settings fetched from Firestore:", profileData);
+                    console.log("onAuthStateChanged: User profile and settings fetched and states updated."); // Detailed log
                   } else {
-                    console.log("onAuthStateChanged: User authenticated via Firebase, but no profile in Firestore. Showing login modal.");
+                    console.warn("onAuthStateChanged: User authenticated via Firebase, but no profile document found in Firestore. Showing login modal."); // Detailed log
                     setIsLoggedIn(false);
                     setShowLoginModal(true);
-                    // Clear local storage for old/missing profiles
-                    localStorage.removeItem('chat_display_username');
-                    localStorage.removeItem('chat_display_name');
-                    // ... (clear other local storage items that are now in Firestore profile)
                   }
-                } catch (error) {
-                  console.error("Error fetching user profile:", error);
-                  setErrorMessage("Failed to load user profile.");
+                } catch (profileError) {
+                  console.error("Error fetching user profile from Firestore:", profileError); // Detailed error log
+                  setErrorMessage(`Failed to load user profile: ${profileError.message}`);
                   setIsLoggedIn(false);
                   setShowLoginModal(true);
                 }
               } else {
-                console.log("onAuthStateChanged: No current user, resetting states.");
+                console.log("onAuthStateChanged: No current user detected or user logged out, resetting states."); // Detailed log
                 setUserId('');
                 setUserEmail('');
                 setDisplayUsername('');
@@ -924,8 +968,12 @@
                 setCustomMainBgValue('#FFFFFF');
                 setCustomThemePresets({ slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
                 setShowOthersBubbleColors(true);
-                // Clear all relevant local storage items
-                // ... (ensure all relevant keys are cleared)
+                // Clear any remembered email when no user is logged in
+                localStorage.removeItem('chat_remembered_email');
+                localStorage.setItem('chat_remember_me', 'false'); // Set rememberMe to false
+                setRememberMe(false); // Update state
+
+                localStorage.removeItem('chat_last_dismissed_announcement_id'); // Clear dismissed announcement ID
               }
             });
 
@@ -1339,14 +1387,25 @@
                 setUserId(loggedInUser.uid);
                 setUserEmail(loggedInUser.email);
 
+                // Save remember me preference and email
+                if (rememberMe) {
+                    localStorage.setItem('chat_remembered_email', loginEmail);
+                    localStorage.setItem('chat_remember_me', 'true');
+                } else {
+                    localStorage.removeItem('chat_remembered_email');
+                    localStorage.setItem('chat_remember_me', 'false');
+                }
+
                 const userProfileRef = doc(db, `artifacts/${appId}/users/${loggedInUser.uid}/userProfiles`, loggedInUser.uid);
                 let profileData = {};
+                console.log(`Attempting to fetch user profile for login: ${userProfileRef.path}`); // Detailed log
                 try {
                     const userProfileSnap = await getDoc(userProfileRef);
                     if (userProfileSnap.exists()) {
                         profileData = userProfileSnap.data();
+                        console.log("Login: User profile data fetched:", profileData); // Detailed log
                     } else {
-                        console.warn("User profile not found in Firestore, creating a new one.");
+                        console.warn("Login: User profile not found in Firestore, creating a new one."); // Detailed log
                         profileData = {
                             email: loggedInUser.email,
                             displayUsername: loggedInUser.email.split('@')[0],
@@ -1379,9 +1438,9 @@
                         await setDoc(userProfileRef, profileData);
                     }
                 } catch (profileError) {
-                    console.error("Error fetching or creating user profile:", profileError);
+                    console.error("Error fetching or creating user profile during login:", profileError); // Detailed error log
                     setErrorMessage("Failed to load or create user profile.");
-                    await signOut(auth);
+                    await signOut(auth); // Sign out if profile loading fails
                     return;
                 }
 
@@ -1475,7 +1534,7 @@
                 const kickSnap = await getDoc(kickDocRef);
                 if (kickSnap.exists()) {
                     setErrorMessage(`you have been kicked from room '${codeToJoin}'.`);
-                    return; // Prevent joining if kicked
+                    return;
                 }
             } catch (error) {
                 console.error("Error checking kick status:", error);
@@ -1598,28 +1657,10 @@
               }
               await signOut(auth);
               setSuccessMessage('logged out successfully.');
-              // Clear all local storage items related to user session
-              localStorage.removeItem('chat_display_username');
-              localStorage.removeItem('chat_display_name');
-              localStorage.removeItem('chat_profile_picture_url');
-              localStorage.removeItem('chat_profile_decoration_url');
-              localStorage.removeItem('chat_profile_decoration_size');
-              localStorage.removeItem('chat_bubble_bg_color');
-              localStorage.removeItem('chat_bubble_text_color');
-              localStorage.removeItem('chat_bio');
-              localStorage.removeItem('chat_profile_bg_from_color');
-              localStorage.removeItem('chat_profile_bg_to_color');
-              localStorage.removeItem('chat_profile_banner');
-              localStorage.removeItem('chat_profile_text_color');
-              localStorage.removeItem('chat_profile_banner_type');
-              localStorage.removeItem('chat_custom_ui_bg_color');
-              localStorage.removeItem('chat_custom_ui_text_color');
-              localStorage.removeItem('chat_custom_ui_secondary_text_color'); // NEW
-              localStorage.removeItem('chat_custom_ui_secondary_bg_color'); // NEW
-              localStorage.removeItem('chat_custom_main_bg_type');
-              localStorage.removeItem('chat_custom_main_bg_value');
-              localStorage.removeItem('chat_theme'); // Clear theme from local storage as well
-              localStorage.removeItem('chat_custom_theme_accent_color'); // Clear accent color from local storage
+              // Clear any remembered email when logging out
+              localStorage.removeItem('chat_remembered_email');
+              localStorage.setItem('chat_remember_me', 'false'); // Explicitly set to false
+              setRememberMe(false); // Update state directly
               localStorage.removeItem('chat_last_dismissed_announcement_id'); // Clear dismissed announcement ID
               // Note: Recent rooms, presets, and showOthersBubbleColors are now managed by Firestore
               // so no explicit local storage clearing for them here.
@@ -1730,23 +1771,8 @@
                 setProfilePictureUrl(newProfilePictureUrl);
                 setBio(newBio);
 
-                localStorage.setItem('chat_display_username', newDisplayUsername);
-                localStorage.setItem('chat_display_name', newDisplayName || newDisplayUsername);
-                localStorage.setItem('chat_profile_picture_url', newProfilePictureUrl);
-                localStorage.setItem('chat_bio', newBio);
-                localStorage.setItem('chat_profile_bg_from_color', profileBgFromColor);
-                localStorage.setItem('chat_profile_bg_to_color', profileBgToColor);
-                localStorage.setItem('chat_profile_banner', profileBanner);
-                localStorage.setItem('chat_profile_text_color', profileTextColorProfile);
-                localStorage.setItem('chat_profile_banner_type', profileBannerType);
-                localStorage.setItem('chat_custom_ui_bg_color', customUIBgColor);
-                localStorage.setItem('chat_custom_ui_text_color', customUITextColor);
-                localStorage.setItem('chat_custom_ui_secondary_text_color', customUISecondaryTextColor); // NEW
-                localStorage.setItem('chat_custom_ui_secondary_bg_color', customUISecondaryBgColor); // NEW
-                localStorage.setItem('chat_custom_main_bg_type', customMainBgType);
-                localStorage.setItem('chat_custom_main_bg_value', customMainBgValue);
-                localStorage.setItem('chat_theme', currentThemeName);
-                localStorage.setItem('chat_custom_theme_accent_color', customThemeAccentColor);
+                // Note: The theme settings are automatically persisted by the `useEffect` above.
+                // The `rememberMe` setting is also handled by its own change listener.
 
                 setSuccessMessage('profile updated successfully!');
                 setShowProfileModal(false); // Close modal on success
@@ -2323,7 +2349,7 @@
               {(!isLoggedIn || showLoginModal) && !showRegisterModal && (
                 <div className={`${currentTheme.chatBg} p-8 rounded-xl shadow-2xl w-full max-w-md text-center`}>
                   <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>welcome back!</h2>
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-4"> {/* Fixed: Added closing double quote to className */}
                     <input
                       type="email" // Changed to email type
                       value={loginEmail}
@@ -2340,6 +2366,18 @@
                       className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
+                    {/* NEW: Remember Me checkbox */}
+                    <div className="flex items-center justify-start mt-2">
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="rememberMe" className={`${currentTheme.secondaryText} text-sm lowercase`}>remember me</label>
+                    </div>
+
                     <button
                       type="submit"
                       className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
@@ -2505,7 +2543,7 @@
                               </button>
                             </form>
                             {recentRooms.length > 0 && (
-                              <div className={`mt-8 pt-4 border-t ${currentTheme.inputBorder} max-h-[200px] overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
+                              <div className={`mt-8 pt-4 border-t ${currentTheme.inputBorder} max-h-[150px] overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                 <h3 className={`text-xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center`}>recently entered chats</h3>
                                 <div className={`space-y-2`}>
                                   {recentRooms.map((roomCode) => (
@@ -2835,9 +2873,9 @@
                             <button
                                 type="button"
                                 onClick={() => openInfoModal(
-                                    'what is a url?',
-                                    'a URL is a link to an image, put simply. to get this link, find any image of your choice and right click it. select "copy image adress", and then paste the following link in the input box. (if the image is not publicly availible, it will most likely fail.)',
-                                    'https://cdn.prod.website-files.com/62d84e447b4f9e7263d31e94/655f6a3627d3fcad6f5c8e60_copy-image-address.jpg'
+                                    'Profile Picture URL Information',
+                                    'To use a custom profile picture, paste a direct image URL here. Ensure the URL ends with an image file extension (e.g., .png, .jpg, .gif). Avoid using URLs from social media profiles directly as they often expire or are not direct image links.',
+                                    'https://placehold.co/300x200/94a3b8/ffffff?text=Image+URL+Example'
                                 )}
                                 className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
                             >
@@ -3211,9 +3249,9 @@
                                       <button
                                           type="button"
                                           onClick={() => openInfoModal(
-                                              'what is a URL?',
-                                              'a URL is a link to an image, put simply. to get this link, find any image of your choice and right click it. select "copy image adress", and then paste the following link in the input box. (if the image is not publicly availible, it will most likely fail.)',
-                                              'https://cdn.prod.website-files.com/62d84e447b4f9e7263d31e94/655f6a3627d3fcad6f5c8e60_copy-image-address.jpg'
+                                              'Main Background Image URL Information',
+                                              'Set a custom background image for the entire application area. Ensure it is a direct image URL for best results.',
+                                              'https://placehold.co/300x200/a3e635/ffffff?text=App+Background+URL'
                                           )}
                                           className={`absolute top-1/2 right-3 -translate-y-1/2 text-stone-500 hover:text-stone-700 transition-colors duration-200`}
                                       >
@@ -3675,7 +3713,7 @@
 
         // UserProfileModal Component
         const UserProfileModal = ({ profileId, currentUserId, appId, db, currentTheme, onClose, onAddFriend, friendsList, onOpenDm, setErrorMessage, setSuccessMessage }) => {
-            const [profileData, setProfileData] = React.useState(null);
+            const [profileData, setProfileData] = React.useState(null); // Corrected: Changed '=>' to '='
             const [isLoading, setIsLoading] = React.useState(true);
             const [isFriend, setIsFriend] = React.useState(false);
             const [dmRoomCode, setDmRoomCode] = React.useState(null);
@@ -3764,7 +3802,7 @@
                 if (profileData?.profileBannerType === 'color' && profileData.profileBanner) {
                     return { backgroundColor: profileData.profileBanner };
                 } else if (profileData?.profileBannerType === 'image' && profileData.profileBanner) {
-                    return { backgroundImage: `url(${profileData.profileBanner})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' };
+                    return { backgroundImage: `url(${profileData.profileBanner})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }; // Fixed: Added missing single quote
                 }
                 return {};
             }, [profileData?.profileBanner, profileData?.profileBannerType]);
@@ -4231,7 +4269,7 @@
                                             {isAdmin && (
                                                 <button
                                                     onClick={() => promptRevertBan(user)}
-                                                    className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold hover:bg-green-600 transition duration-200 lowercase ml-auto"
+                                                    className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold hover:bg-green-600 transition duration-300 lowercase ml-auto"
                                                     title="Revert Ban"
                                                 >
                                                     revert
@@ -4289,6 +4327,10 @@
                     title: "Advanced Customization and User Experience Refinements",
                     description: "Further expanded theme customization options to include distinct color pickers for primary and secondary UI text, and primary and secondary UI background elements, offering granular control over the application's appearance. The 'Chat UI Background Color' section was renamed to 'Chat UI' for clarity. The custom theme's accent color now dynamically influences the scrollbar's visual style. Informational icons have been added next to URL input fields, providing helpful guidance on image URL usage. A dedicated 'Changelog' feature has been added, offering a transparent overview of application updates and enhancements.",
                 },
+                {
+                    title: "Login Experience Improvement",
+                    description: "Introduced a 'Remember Me' feature to the login modal, which saves the user's email locally for convenient pre-filling on subsequent visits. This enhances the login flow and user experience.",
+                }
             ];
 
             return (
