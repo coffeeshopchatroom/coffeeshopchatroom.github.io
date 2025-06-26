@@ -1457,175 +1457,138 @@ React.useEffect(() => {
           };
 
           const handleLogin = async (e) => {
-            const handleLogin = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+            e.preventDefault();
+            setErrorMessage('');
+            setSuccessMessage('');
 
-    if (!loginEmail || !loginPassword) {
-        setErrorMessage('email/username and password are required.');
-        return;
-    }
-
-    // Determine if the input is likely an email or a username
-    const isEmail = loginEmail.includes('@');
-    let emailToSignIn = loginEmail; // Assume it's email first
-
-    try {
-        // Check for global ban first (using the current user's UID if available)
-        // This check should happen before attempting actual login for existing users,
-        // but for a new login, we can't get UID until after auth.
-        // For simplicity here, the ban check remains largely as before,
-        // applying to the UID obtained *after* successful sign-in.
-        // A more robust system might check for bans by email/username pre-auth.
-
-        if (!isEmail) {
-            // If it's not an email, assume it's a username and try to find the user's email
-            const userProfilesCollectionRef = collection(db, `artifacts/${appId}/users`); // Access the parent collection
-            const q = query(userProfilesCollectionRef, where('displayUsername', '==', loginEmail.toLowerCase())); // Search for username
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                setErrorMessage('no account found with that username.');
-                return;
+            if (!loginEmail || !loginPassword) {
+              setErrorMessage('email and password are required.');
+              return;
             }
 
-            // For simplicity, take the first matching user.
-            // In a real app, you might want to enforce unique usernames during registration.
-            const profileData = querySnapshot.docs[0].data();
-            emailToSignIn = profileData.email;
-            if (!emailToSignIn) {
-                setErrorMessage('could not retrieve email for that username.');
-                return;
-            }
-        }
-
-        const userCredential = await signInWithEmailAndPassword(auth, emailToSignIn, loginPassword);
-        const loggedInUser = userCredential.user;
-
-        setUserId(loggedInUser.uid);
-        setUserEmail(loggedInUser.email);
-
-        // Save remember me preference and email
-        if (rememberMe) {
-            localStorage.setItem('chat_remembered_email', loggedInUser.email); // Save the actual email used
-            localStorage.setItem('chat_remember_me', 'true');
-        } else {
-            localStorage.removeItem('chat_remembered_email');
-            localStorage.setItem('chat_remember_me', 'false');
-        }
-
-        const userProfileRef = doc(db, `artifacts/${appId}/users/${loggedInUser.uid}/userProfiles`, loggedInUser.uid);
-        let profileData = {};
-        console.log(`Attempting to fetch user profile for login: ${userProfileRef.path}`); // Detailed log
-        try {
-            const userProfileSnap = await getDoc(userProfileRef);
-            if (userProfileSnap.exists()) {
-                profileData = userProfileSnap.data();
-                console.log("Login: User profile data fetched:", profileData); // Detailed log
-            } else {
-                console.warn("Login: User profile not found in Firestore, creating a new one."); // Detailed log
-                profileData = {
-                    email: loggedInUser.email,
-                    displayUsername: loggedInUser.email.split('@')[0],
-                    displayName: loggedInUser.email.split('@')[0],
-                    profilePictureUrl: '',
-                    profileDecorationUrl: '',
-                    profileDecorationSize: 100,
-                    myBubbleBgColor: '',
-                    myBubbleTextColor: '',
-                    bio: '',
-                    profileBgFromColor: '#ffffff',
-                    profileBgToColor: '#e0e0e0',
-                    profileBanner: '',
-                    profileTextColorProfile: '',
-                    profileBannerType: 'color',
-                    isAdmin: false,
-                    createdAt: serverTimestamp(),
-                    customUIBgColor: '#ffffff',
-                    customUITextColor: '#000000',
-                    customUISecondaryTextColor: '#71717a',
-                    customUISecondaryBgColor: '#e7e5e4',
-                    customMainBgType: 'color',
-                    customMainBgValue: '#FFFFFF',
-                    currentThemeName: 'default',
-                    customThemePresets: { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } },
-                    showOthersBubbleColors: true,
-                    recentRooms: [],
-                };
-                await setDoc(userProfileRef, profileData);
-            }
-        } catch (profileError) {
-            console.error("Error fetching or creating user profile during login:", profileError); // Detailed error log
-            setErrorMessage("Failed to load or create user profile.");
-            await signOut(auth); // Sign out if profile loading fails
-            return;
-        }
-
-        // Apply global ban check now that we have loggedInUser.uid
-        const banDocRef = doc(db, `artifacts/${appId}/public/data/bannedUsers`, loggedInUser.uid);
-        try {
-            const banSnap = await getDoc(banDocRef);
-            if (banSnap.exists()) {
-                const banData = banSnap.data();
-                const banUntilTime = banData.banUntil?.toDate().getTime();
-                if (banUntilTime && Date.now() < banUntilTime) {
-                    setErrorMessage(`you are temporarily banned until ${new Date(banUntilTime).toLocaleTimeString()}.`);
-                    await signOut(auth); // Immediately sign out if banned
-                    return;
-                } else {
-                    // Ban expired, clean up
-                    await deleteDoc(banDocRef).catch(console.error);
+            try {
+                // Check for global ban first (using the email's UID if available, or a fallback)
+                const potentialUid = auth.currentUser ? auth.currentUser.uid : null;
+                if (potentialUid) {
+                    const banDocRef = doc(db, `artifacts/${appId}/public/data/bannedUsers`, potentialUid);
+                    const banSnap = await getDoc(banDocRef);
+                    if (banSnap.exists()) {
+                        const banData = banSnap.data();
+                        const banUntilTime = banData.banUntil?.toDate().getTime();
+                        if (banUntilTime && Date.now() < banUntilTime) {
+                            setErrorMessage(`you are temporarily banned until ${new Date(banUntilTime).toLocaleTimeString()}.`);
+                            return;
+                        } else {
+                            // Ban expired, clean up
+                            await deleteDoc(banDocRef).catch(console.error);
+                        }
+                    }
                 }
+
+                const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+                const loggedInUser = userCredential.user;
+
+                setUserId(loggedInUser.uid);
+                setUserEmail(loggedInUser.email);
+
+                // Save remember me preference and email
+                if (rememberMe) {
+                    localStorage.setItem('chat_remembered_email', loginEmail);
+                    localStorage.setItem('chat_remember_me', 'true');
+                } else {
+                    localStorage.removeItem('chat_remembered_email');
+                    localStorage.setItem('chat_remember_me', 'false');
+                }
+
+                const userProfileRef = doc(db, `artifacts/${appId}/users/${loggedInUser.uid}/userProfiles`, loggedInUser.uid);
+                let profileData = {};
+                console.log(`Attempting to fetch user profile for login: ${userProfileRef.path}`); // Detailed log
+                try {
+                    const userProfileSnap = await getDoc(userProfileRef);
+                    if (userProfileSnap.exists()) {
+                        profileData = userProfileSnap.data();
+                        console.log("Login: User profile data fetched:", profileData); // Detailed log
+                    } else {
+                        console.warn("Login: User profile not found in Firestore, creating a new one."); // Detailed log
+                        profileData = {
+                            email: loggedInUser.email,
+                            displayUsername: loggedInUser.email.split('@')[0],
+                            displayName: loggedInUser.email.split('@')[0],
+                            profilePictureUrl: '',
+                            profileDecorationUrl: '',
+                            profileDecorationSize: 100,
+                            myBubbleBgColor: '',
+                            myBubbleTextColor: '',
+                            bio: '',
+                            profileBgFromColor: '#ffffff',
+                            profileBgToColor: '#e0e0e0',
+                            profileBanner: '',
+                            profileTextColorProfile: '',
+                            profileBannerType: 'color',
+                            isAdmin: false,
+                            createdAt: serverTimestamp(),
+                            customUIBgColor: '#ffffff',
+                            customUITextColor: '#000000',
+                            customUISecondaryTextColor: '#71717a', // NEW
+                            customUISecondaryBgColor: '#e7e5e4', // NEW
+                            customMainBgType: 'color',
+                            customMainBgValue: '#FFFFFF',
+                            // Initialize new settings for new profiles
+                            currentThemeName: 'default',
+                            customThemePresets: { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } },
+                            showOthersBubbleColors: true,
+                            recentRooms: [],
+                        };
+                        await setDoc(userProfileRef, profileData);
+                    }
+                } catch (profileError) {
+                    console.error("Error fetching or creating user profile during login:", profileError); // Detailed error log
+                    setErrorMessage("Failed to load or create user profile.");
+                    await signOut(auth); // Sign out if profile loading fails
+                    return;
+                }
+
+                // Update local states from profileData (Firestore is the source of truth)
+                setDisplayUsername(profileData.displayUsername || loggedInUser.email.split('@')[0]);
+                setDisplayName(profileData.displayName || profileData.displayUsername || loggedInUser.email.split('@')[0]);
+                setProfilePictureUrl(profileData.profilePictureUrl || '');
+                setProfileDecorationUrl(profileData.profileDecorationUrl || '');
+                setTempProfileDecorationUrl(profileData.profileDecorationUrl || '');
+                setProfileDecorationSize(profileData.profileDecorationSize || 100);
+                setTempProfileDecorationSize(profileData.profileDecorationSize || 100);
+                setMyBubbleBgColor(profileData.myBubbleBgColor || '');
+                setMyBubbleTextColor(profileData.myBubbleTextColor || '');
+                setBio(profileData.bio || '');
+                setProfileBgFromColor(profileData.profileBgFromColor || '#ffffff');
+                setProfileBgToColor(profileData.profileBgToColor || '#e0e0e0');
+                setProfileBanner(profileData.profileBanner || '');
+                setProfileTextColorProfile(profileData.profileTextColorProfile || '');
+                setProfileBannerType(profileData.profileBannerType || 'color');
+                setIsAdmin(profileData.isAdmin || false);
+                setIsLoggedIn(true);
+                setShowLoginModal(false);
+                setSuccessMessage('login successful!');
+
+                // Load new settings from profileData
+                setCurrentThemeName(profileData.currentThemeName || 'default');
+                setCustomThemeAccentColor(profileData.customThemeAccentColor || '#8b5cf6');
+                setCustomUIBgColor(profileData.customUIBgColor || '#ffffff');
+                setCustomUITextColor(profileData.customUITextColor || '#000000');
+                setCustomUISecondaryTextColor(profileData.customUISecondaryTextColor || '#71717a'); // NEW
+                setCustomUISecondaryBgColor(profileData.customUISecondaryBgColor || '#e7e5e4'); // NEW
+                setCustomMainBgType(profileData.customMainBgType || 'color');
+                setCustomMainBgValue(profileData.customMainBgValue || '#FFFFFF');
+                setCustomThemePresets(profileData.customThemePresets || { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
+                setShowOthersBubbleColors(profileData.showOthersBubbleColors !== undefined ? profileData.showOthersBubbleColors : true);
+                setRecentRooms(profileData.recentRooms || []);
+                
+                console.log("Logged in user:", loggedInUser.email);
+
+            } catch (error) {
+              console.error('error during login:', error);
+              setErrorMessage(`login failed: ${error.message}`);
             }
-        } catch (error) {
-            console.error("Error checking ban status during login:", error);
-            // Don't block login, just log error for ban check itself
-        }
-
-
-        // Update local states from profileData (Firestore is the source of truth)
-        setDisplayUsername(profileData.displayUsername || loggedInUser.email.split('@')[0]);
-        setDisplayName(profileData.displayName || profileData.displayUsername || loggedInUser.email.split('@')[0]);
-        setProfilePictureUrl(profileData.profilePictureUrl || '');
-        setProfileDecorationUrl(profileData.profileDecorationUrl || '');
-        setTempProfileDecorationUrl(profileData.profileDecorationUrl || '');
-        setProfileDecorationSize(profileData.profileDecorationSize || 100);
-        setTempProfileDecorationSize(profileData.profileDecorationSize || 100);
-        setMyBubbleBgColor(profileData.myBubbleBgColor || '');
-        setMyBubbleTextColor(profileData.myBubbleTextColor || '');
-        setBio(profileData.bio || '');
-        setProfileBgFromColor(profileData.profileBgFromColor || '#ffffff');
-        setProfileBgToColor(profileData.profileBgToColor || '#e0e0e0');
-        setProfileBanner(profileData.profileBanner || '');
-        setProfileTextColorProfile(profileData.profileTextColorProfile || '');
-        setProfileBannerType(profileData.profileBannerType || 'color');
-        setIsAdmin(profileData.isAdmin || false);
-        setIsLoggedIn(true);
-        setShowLoginModal(false);
-        setSuccessMessage('login successful!');
-
-        // Load new settings from profileData
-        setCurrentThemeName(profileData.currentThemeName || 'default');
-        setCustomThemeAccentColor(profileData.customThemeAccentColor || '#8b5cf6');
-        setCustomUIBgColor(profileData.customUIBgColor || '#ffffff');
-        setCustomUITextColor(profileData.customUITextColor || '#000000');
-        setCustomUISecondaryTextColor(profileData.customUISecondaryTextColor || '#71717a');
-        setCustomUISecondaryBgColor(profileData.customUISecondaryBgColor || '#e7e5e4');
-        setCustomMainBgType(profileData.customMainBgType || 'color');
-        setCustomMainBgValue(profileData.customMainBgValue || '#FFFFFF');
-        setCustomThemePresets(profileData.customThemePresets || { slot1: { name: '', theme: null }, slot2: { name: '', theme: null }, slot3: { name: '', theme: null } });
-        setShowOthersBubbleColors(profileData.showOthersBubbleColors !== undefined ? profileData.showOthersBubbleColors : true);
-        setRecentRooms(profileData.recentRooms || []);
-
-        console.log("Logged in user:", loggedInUser.email);
-
-    } catch (error) {
-        console.error('error during login:', error);
-        setErrorMessage(`login failed: ${error.message}`);
-    }
-};
-
+          };
 
           const handleJoinRoom = async (e, roomCode) => {
             if (e && e.preventDefault) {
@@ -2495,7 +2458,7 @@ React.useEffect(() => {
                       type="email" // Changed to email type
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="username or email"
+                      placeholder="email"
                       className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
