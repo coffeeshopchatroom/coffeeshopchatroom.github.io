@@ -2553,19 +2553,7 @@ React.useEffect(() => {
               {!showScreensaver && isLoggedIn && ( // This condition hides the main UI when the screensaver is active
     <>
         {/*
-            ALL your existing main chat UI JSX (Initial Room Selection,
-            Chatroom UI, DM Chat UI) should be placed here.
-            Do NOT copy it from this snippet. It is already in your file.
-        */}
-        {/* Initial Room/DM Selection UI */}
-        {!activeRoomCode && ( /* ... your existing code for this block ... */ )}
-
-        {/* CHATROOM UI (FULL SCREEN) */}
-        {activeRoomCode && !isDMActive && ( /* ... your existing code for this block ... */ )}
-
-        {/* DM CHAT UI (TWO PANELS - Left for messages, Right for DM list) */}
-        {activeRoomCode && isDMActive && ( /* ... your existing code for this block ... */ )}
-    </>
+               </>
 )}
                   {/* Initial Room/DM Selection UI */}
                   {!activeRoomCode && (
