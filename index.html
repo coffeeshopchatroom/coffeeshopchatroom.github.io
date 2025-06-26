@@ -555,6 +555,36 @@
           // NEW: State for Remember Me checkbox
           const [rememberMe, setRememberMe] = React.useState(localStorage.getItem('chat_remember_me') === 'true');
 
+	// NEW: Screensaver Feature - States and Handlers - START
+
+	// Screensaver states
+const [showScreensaver, setShowScreensaver] = React.useState(false);
+const idleTimeoutRef = React.useRef(null);
+const screensaverIntervalRef = React.useRef(null);
+const [lastActivityTime, setLastActivityTime] = React.useState(Date.now());
+
+// Screensaver Handlers
+const handleActivateScreensaver = () => {
+    setShowScreensaver(true);
+    // Clear the idle timeout immediately when activating manually
+    if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+        idleTimeoutRef.current = null;
+    }
+};
+
+const handleDeactivateScreensaver = React.useCallback(() => {
+    setShowScreensaver(false);
+    setLastActivityTime(Date.now()); // Reset activity time immediately
+    // Reset the idle timer when screensaver is deactivated
+    if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+    }
+    idleTimeoutRef.current = setTimeout(handleActivateScreensaver, 5 * 60 * 1000); // 5 minutes idle
+}, []); // Ensure useCallback dependencies are correct if you move this
+
+// NEW: Screensaver Feature - States and Handlers - END
+
 
           // Define themes
           const themes = {
@@ -1067,6 +1097,80 @@
 
             return () => unsubscribe();
           }, [isAuthReady, db, appId]);
+
+// NEW: Screensaver Feature - Effects - START
+
+// Effect for Idle Timeout
+React.useEffect(() => {
+    if (!isLoggedIn) {
+        // Clear any active idle timers if user logs out
+        if (idleTimeoutRef.current) {
+            clearTimeout(idleTimeoutRef.current);
+            idleTimeoutRef.current = null;
+        }
+        return;
+    }
+
+    const idleTimeLimit = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    const resetIdleTimer = () => {
+        setLastActivityTime(Date.now());
+        if (idleTimeoutRef.current) {
+            clearTimeout(idleTimeoutRef.current);
+        }
+        idleTimeoutRef.current = setTimeout(() => {
+            console.log("Idle for 5 minutes, activating screensaver.");
+            setShowScreensaver(true);
+        }, idleTimeLimit);
+    };
+
+    // Attach event listeners for user activity
+    document.addEventListener('mousemove', resetIdleTimer);
+    document.addEventListener('mousedown', resetIdleTimer);
+    document.addEventListener('keydown', resetIdleTimer);
+    document.addEventListener('scroll', resetIdleTimer);
+    document.addEventListener('touchstart', resetIdleTimer);
+
+    // Initial setup of the timer
+    resetIdleTimer();
+
+    // Cleanup function
+    return () => {
+        if (idleTimeoutRef.current) {
+            clearTimeout(idleTimeoutRef.current);
+        }
+        document.removeEventListener('mousemove', resetIdleTimer);
+        document.removeEventListener('mousedown', resetIdleTimer);
+        document.removeEventListener('keydown', resetIdleTimer);
+        document.removeEventListener('scroll', resetIdleTimer);
+        document.removeEventListener('touchstart', resetIdleTimer);
+    };
+}, [isLoggedIn]); // Dependency on isLoggedIn to activate/deactivate idle checks
+
+// Effect for Screensaver Clock Update
+React.useEffect(() => {
+    if (showScreensaver) {
+        // Update clock every second
+        screensaverIntervalRef.current = setInterval(() => {
+            // No state update needed here directly, as the ScreensaverDisplay
+            // component will handle its own time rendering
+            // (This effect mainly ensures the screensaver is 'active' and prevents other updates)
+        }, 1000);
+    } else {
+        // Clear the interval when screensaver is off
+        if (screensaverIntervalRef.current) {
+            clearInterval(screensaverIntervalRef.current);
+        }
+    }
+
+    return () => {
+        if (screensaverIntervalRef.current) {
+            clearInterval(screensaverIntervalRef.current);
+        }
+    };
+}, [showScreensaver]);
+
+// NEW: Screensaver Feature - Effects - END
 
           // Effect to listen for friends list changes
           React.useEffect(() => {
@@ -2446,8 +2550,23 @@
               )}
 
               {/* Main chat UI: Conditional rendering based on activeRoomCode and isDMActive */}
-              {isLoggedIn && (
-                <>
+              {!showScreensaver && isLoggedIn && ( // This condition hides the main UI when the screensaver is active
+    <>
+        {/*
+            ALL your existing main chat UI JSX (Initial Room Selection,
+            Chatroom UI, DM Chat UI) should be placed here.
+            Do NOT copy it from this snippet. It is already in your file.
+        */}
+        {/* Initial Room/DM Selection UI */}
+        {!activeRoomCode && ( /* ... your existing code for this block ... */ )}
+
+        {/* CHATROOM UI (FULL SCREEN) */}
+        {activeRoomCode && !isDMActive && ( /* ... your existing code for this block ... */ )}
+
+        {/* DM CHAT UI (TWO PANELS - Left for messages, Right for DM list) */}
+        {activeRoomCode && isDMActive && ( /* ... your existing code for this block ... */ )}
+    </>
+)}
                   {/* Initial Room/DM Selection UI */}
                   {!activeRoomCode && (
                     <div className={`${currentTheme.chatBg} p-6 rounded-xl shadow-2xl w-full max-w-5xl h-[70vh] flex flex-col md:flex-row gap-6 relative`}>
@@ -3705,6 +3824,27 @@
                   />
               )}
 
+// NEW: Screensaver Feature - Button and Display - START
+
+{isLoggedIn && ( // Only show screensaver button if user is logged in
+    <button
+        onClick={handleActivateScreensaver}
+        className={`fixed bottom-4 right-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
+        title="Activate Screensaver"
+    >
+        screensaver
+    </button>
+)}
+
+{showScreensaver && (
+    <ScreensaverDisplay
+        currentTheme={currentTheme}
+        onDeactivate={handleDeactivateScreensaver}
+    />
+)}
+
+// NEW: Screensaver Feature - Button and Display - END
+
               {/* "made by" text at the bottom */}
               <p className={`mt-8 ${currentTheme.secondaryText} text-xs lowercase`}>made by oliver</p>
             </div>
@@ -4355,7 +4495,62 @@
                 </div>
             );
         };
+// NEW: Screensaver Feature - ScreensaverDisplay Component Definition - START
+const ScreensaverDisplay = ({ currentTheme, onDeactivate }) => {
+    const [currentTime, setCurrentTime] = React.useState('');
+    const [fadeState, setFadeState] = React.useState('fade-in'); // 'fade-in', 'visible', 'fade-out'
 
+    React.useEffect(() => {
+        // Update time immediately and then every second
+        const updateTime = () => {
+            const now = new Date();
+            setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        };
+
+        updateTime(); // Initial update
+        const intervalId = setInterval(updateTime, 1000);
+
+        // Trigger fade-in animation
+        const timeoutId = setTimeout(() => setFadeState('visible'), 100); // Small delay to allow fade-in class to apply
+
+        return () => {
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+        };
+    }, []);
+
+    const handleScreenClick = () => {
+        setFadeState('fade-out');
+        setTimeout(onDeactivate, 500); // Match fade-out duration
+    };
+
+    const fadeClasses = {
+        'fade-in': 'opacity-0 transition-opacity duration-500',
+        'visible': 'opacity-100 transition-opacity duration-500',
+        'fade-out': 'opacity-0 transition-opacity duration-500',
+    };
+
+    return (
+        <div
+            className={`fixed inset-0 z-50 flex flex-col items-center justify-center cursor-none ${fadeClasses[fadeState]}`}
+            style={{
+                ...(currentTheme.mainBgColorStyle ? { backgroundColor: currentTheme.mainBgColorStyle } : {}),
+                ...currentTheme.mainBgImageStyle
+            }}
+            onClick={handleScreenClick}
+        >
+            <div className="relative text-center">
+                <p className={`text-9xl font-extrabold mb-4 ${currentTheme.textColor} select-none`}>
+                    {currentTime}
+                </p>
+                <p className={`text-2xl ${currentTheme.secondaryText} select-none`}>
+                    coffee shop timer
+                </p>
+            </div>
+        </div>
+    );
+};
+// NEW: Screensaver Feature - ScreensaverDisplay Component Definition - END
 
         // render the react app to the root element
         ReactDOM.render(React.createElement(App), document.getElementById('root'));
