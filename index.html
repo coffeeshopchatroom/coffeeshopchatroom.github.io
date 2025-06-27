@@ -2417,13 +2417,13 @@ React.useEffect(() => {
                 }}
             >
               {errorMessage && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-stone-800 text-white p-3 rounded-lg shadow-lg flex items-center justify-between z-50">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-stone-800 text-white p-3 rounded-full shadow-lg flex items-center justify-between z-50">
                   <span className="lowercase">{errorMessage}</span>
                   <button onClick={() => setErrorMessage('')} className="ml-4 font-bold text-lg leading-none">&times;</button>
                 </div>
               )}
               {successMessage && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-stone-600 text-white p-3 rounded-lg shadow-lg flex items-center justify-between z-50">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-stone-600 text-white p-3 rounded-full shadow-lg flex items-center justify-between z-50">
                   <span className="lowercase">{successMessage}</span>
                   <button onClick={() => setSuccessMessage('')} className="ml-4 font-bold text-lg leading-none">&times;</button>
                 </div>
@@ -2431,7 +2431,7 @@ React.useEffect(() => {
 
               {/* NEW: Global Announcement Display */}
               {globalAnnouncement && showGlobalAnnouncement && (
-                <div className="w-full max-w-4xl bg-yellow-200 text-yellow-900 p-3 rounded-lg shadow-md mb-6 flex items-start justify-between">
+                <div className="w-full max-w-4xl bg-yellow-200 text-yellow-900 p-3 rounded-full shadow-md mb-6 flex items-start justify-between">
                     <p className="font-semibold text-sm lowercase">
                         <span className="font-bold uppercase mr-2">[announcement by {globalAnnouncement.senderDisplayName || 'admin'}]</span>
                         {globalAnnouncement.text}
@@ -2459,7 +2459,7 @@ React.useEffect(() => {
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       placeholder="email"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
                     <input
@@ -2467,7 +2467,7 @@ React.useEffect(() => {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="password"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
                     {/* NEW: Remember Me checkbox */}
@@ -2484,7 +2484,7 @@ React.useEffect(() => {
 
                     <button
                       type="submit"
-                      className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                      className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                     >
                       log in
                     </button>
@@ -2511,7 +2511,7 @@ React.useEffect(() => {
                       value={registerEmail}
                       onChange={(e) => setRegisterEmail(e.target.value)}
                       placeholder="choose email"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
                     <input
@@ -2519,7 +2519,7 @@ React.useEffect(() => {
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       placeholder="choose password"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
                     <input
@@ -2527,12 +2527,12 @@ React.useEffect(() => {
                       value={registerDisplayName}
                       onChange={(e) => setRegisterDisplayName(e.target.value)}
                       placeholder="choose display name (e.g. 'CoffeeLover')"
-                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                      className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                       required
                     />
                     <button
                       type="submit"
-                      className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                      className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-full font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                     >
                       register
                     </button>
@@ -2590,7 +2590,7 @@ React.useEffect(() => {
                       <div className="absolute top-4 left-4 flex space-x-2">
                         <button
                           onClick={() => { setCurrentView('chatrooms'); setActiveRoomCode(''); setMessages([]); }}
-                          className={`px-4 py-2 rounded-lg font-semibold lowercase ${
+                          className={`px-4 py-2 rounded-full font-semibold lowercase ${
                             currentView === 'chatrooms' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} ${currentTheme.buttonTertiaryHover}`
                           } transition duration-200`}
                         >
@@ -2598,7 +2598,7 @@ React.useEffect(() => {
                         </button>
                         <button
                           onClick={() => { setCurrentView('dms'); setActiveRoomCode(''); setMessages([]); }}
-                          className={`px-4 py-2 rounded-lg font-semibold lowercase ${
+                          className={`px-4 py-2 rounded-full font-semibold lowercase ${
                             currentView === 'dms' ? `${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText}` : `${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} ${currentTheme.buttonTertiaryHover}`
                           } transition duration-200`}
                         >
@@ -2607,7 +2607,7 @@ React.useEffect(() => {
                       </div>
 
                       {/* Left Panel: Predefined Chatrooms */}
-                      <div className={`flex-1 ${currentTheme.messagesBg} p-6 rounded-lg overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
+                      <div className={`flex-1 ${currentTheme.messagesBg} p-6 rounded-full overflow-y-auto ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                         {currentView === 'chatrooms' ? (
                           <>
                             <h2 className={`text-2xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center pt-16`}>join a chatroom</h2>
@@ -2616,7 +2616,7 @@ React.useEffect(() => {
                                 <button
                                   key={room.name}
                                   onClick={(e) => handleJoinRoom(e, room.name)}
-                                  className={`w-full text-left p-3 rounded-lg ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase`}
+                                  className={`w-full text-left p-3 rounded-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase`}
                                 >
                                   # {room.label}
                                 </button>
@@ -2629,7 +2629,7 @@ React.useEffect(() => {
                       </div>
 
                       {/* Right Panel: Conditional Content (Custom Code + Recent Chats OR DMs) */}
-                      <div className={`flex-1 ${currentTheme.chatBg} p-6 rounded-lg flex flex-col justify-between`}>
+                      <div className={`flex-1 ${currentTheme.chatBg} p-6 rounded-full flex flex-col justify-between`}>
                         {currentView === 'chatrooms' && (
                           <div>
                             <h2 className={`text-2xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center pt-16`}>enter a custom code</h2>
@@ -2639,12 +2639,12 @@ React.useEffect(() => {
                                 value={joinRoomCode}
                                 onChange={(e) => setJoinRoomCode(e.target.value)}
                                 placeholder="enter room code (e.g., my-secret-spot)"
-                                className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                                className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                 required
                               />
                               <button
                                 type="submit"
-                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                               >
                                 join custom room
                               </button>
@@ -2657,7 +2657,7 @@ React.useEffect(() => {
                                     <button
                                       key={roomCode}
                                       onClick={(e) => handleJoinRoom(e, roomCode)}
-                                      className={`w-full text-left p-3 rounded-lg ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase`}
+                                      className={`w-full text-left p-3 rounded-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase`}
                                     >
                                       # {roomCode}
                                     </button>
@@ -2679,7 +2679,7 @@ React.useEffect(() => {
                                     <button
                                       key={friend.id}
                                       onClick={() => handleOpenDm(friend.id, friend.dmRoomCode)}
-                                      className={`w-full text-left p-3 rounded-lg ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase flex items-center`}
+                                      className={`w-full text-left p-3 rounded-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase flex items-center`}
                                     >
                                       <img
                                         src={friend.profilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
@@ -2729,7 +2729,7 @@ React.useEffect(() => {
                           </button>
                           <button
                             onClick={() => { setActiveRoomCode(''); setMessages([]); setCurrentView('chatrooms'); }}
-                            className={`${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                            className={`${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} px-4 py-2 rounded-full text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                           >
                             leave room
                           </button>
@@ -2737,7 +2737,7 @@ React.useEffect(() => {
                           {isAdmin ? (
                             <button
                                 onClick={handleClearAllMessages}
-                                className={`bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
+                                className={`bg-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
                                 title="Clear All Messages"
                             >
                                 clear all
@@ -2748,7 +2748,7 @@ React.useEffect(() => {
 
                       <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto pr-2 ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                         {messages.length === 0 ? (
-                          <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase bg-yellow-100 p-4 rounded-lg`}>
+                          <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase bg-yellow-100 p-4 rounded-full`}>
                             no messages yet. be the first to send one!
                           </p>
                         ) : (
@@ -2789,11 +2789,11 @@ React.useEffect(() => {
                           value={newMessageText}
                           onChange={handleNewMessageTextChange} // Updated to new handler
                           placeholder="type your message..."
-                          className={`flex-1 p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                          className={`flex-1 p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                         />
                         <button
                           type="submit"
-                          className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                          className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                         >
                           send
                         </button>
@@ -2833,7 +2833,7 @@ React.useEffect(() => {
                         )}
                         
                         {/* LEFT PANEL: Message Display and Input for DM */}
-                        <div className={`flex-1 flex flex-col ${currentTheme.messagesBg} p-4 rounded-lg`}>
+                        <div className={`flex-1 flex flex-col ${currentTheme.messagesBg} p-4 rounded-full`}>
                             <div className={`flex justify-between items-center mb-4 pb-4 border-b ${currentTheme.inputBorder}`}>
                                 <h2 className={`text-2xl font-bold ${currentTheme.textColor} lowercase`}>
                                     <span className={`${currentTheme.secondaryText}`}>dm with: </span>
@@ -2858,14 +2858,14 @@ React.useEffect(() => {
                                     </button>
                                     <button
                                         onClick={() => { setActiveRoomCode(''); setMessages([]); setCurrentView('dms'); }}
-                                        className={`${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                                        className={`${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} px-4 py-2 rounded-full text-sm font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                                     >
                                         leave dm
                                     </button>
                                     {isAdmin ? (
                                         <button
                                             onClick={handleClearAllMessages}
-                                            className={`bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
+                                            className={`bg-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
                                             title="Clear All Messages"
                                         >
                                             clear all
@@ -2876,7 +2876,7 @@ React.useEffect(() => {
 
                             <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto pr-2 ${currentTheme.scrollbar}`} style={currentTheme.scrollbarVars}>
                                 {messages.length === 0 ? (
-                                    <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase bg-yellow-100 p-4 rounded-lg`}>
+                                    <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase bg-yellow-100 p-4 rounded-full`}>
                                         no messages yet. be the first to send one!
                                     </p>
                                 ) : (
@@ -2917,11 +2917,11 @@ React.useEffect(() => {
                                     value={newMessageText}
                                     onChange={handleNewMessageTextChange} // Updated to new handler
                                     placeholder="type your message..."
-                                    className={`flex-1 p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                                    className={`flex-1 p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                 />
                                 <button
                                     type="submit"
-                                    className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                    className={`w-auto px-6 py-3 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                                 >
                                     send
                                 </button>
@@ -2929,7 +2929,7 @@ React.useEffect(() => {
                         </div>
 
                         {/* RIGHT PANEL: DM List always visible in DM view */}
-                        <div className={`w-1/3 flex flex-col ${currentTheme.chatBg} p-4 rounded-lg ml-4`}>
+                        <div className={`w-1/3 flex flex-col ${currentTheme.chatBg} p-4 rounded-full ml-4`}>
                             <h3 className={`text-xl font-bold mb-4 ${currentTheme.textColor} lowercase text-center`}>your direct messages</h3>
                             {friendsList.length === 0 ? (
                                 <p className={`${currentTheme.secondaryText} text-center mt-8 lowercase`}>you have no friends yet. click on a user's name in a chatroom to add them!</p>
@@ -2939,7 +2939,7 @@ React.useEffect(() => {
                                     <button
                                       key={friend.id}
                                       onClick={() => handleOpenDm(friend.id, friend.dmRoomCode)}
-                                      className={`w-full text-left p-3 rounded-lg ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase flex items-center`}
+                                      className={`w-full text-left p-3 rounded-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} font-semibold ${currentTheme.buttonTertiaryHover} transition duration-200 shadow-sm lowercase flex items-center`}
                                     >
                                       <img
                                         src={friend.profilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
@@ -2975,7 +2975,7 @@ React.useEffect(() => {
                               defaultValue={profilePictureUrl}
                               onChange={(e) => setProfilePictureUrl(e.target.value)}
                               placeholder="https://placehold.co/150x150/cccccc/ffffff?text=PFP"
-                              className={`w-full mt-4 p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                              className={`w-full mt-4 p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                             />
                             <button
                                 type="button"
@@ -3000,7 +3000,7 @@ React.useEffect(() => {
                           placeholder="tell us about yourself (max 160 characters)"
                           maxLength="160"
                           rows="4"
-                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} resize-y`}
+                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} resize-y`}
                         ></textarea>
                       </div>
 
@@ -3066,7 +3066,7 @@ React.useEffect(() => {
                           value={displayName} // This is the state for what's shown publicly
                           onChange={(e) => setDisplayName(e.target.value)}
                           placeholder="your public display name"
-                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                         />
                       </div>
                       <div className="w-full max-w-sm">
@@ -3078,7 +3078,7 @@ React.useEffect(() => {
                           value={displayUsername}
                           onChange={(e) => setDisplayUsername(e.target.value)}
                           placeholder="your public username"
-                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                           required
                         />
                       </div>
@@ -3091,7 +3091,7 @@ React.useEffect(() => {
                           value={userEmail}
                           onChange={(e) => setUserEmail(e.target.value)}
                           placeholder="your email address"
-                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                           required
                         />
                       </div>
@@ -3101,7 +3101,7 @@ React.useEffect(() => {
                           <button
                               type="button"
                               onClick={() => setShowProfileThemeSettings(!showProfileThemeSettings)}
-                              className={`w-full flex justify-between items-center px-4 py-3 rounded-lg font-bold ${currentTheme.textColor} hover:bg-stone-100 transition duration-200 lowercase`}
+                              className={`w-full flex justify-between items-center px-4 py-3 rounded-full font-bold ${currentTheme.textColor} hover:bg-stone-100 transition duration-200 lowercase`}
                           >
                               <span>profile theme</span>
                               <i className={`fas ${showProfileThemeSettings ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
@@ -3116,14 +3116,14 @@ React.useEffect(() => {
                                               type="color"
                                               value={profileBgFromColor}
                                               onChange={(e) => setProfileBgFromColor(e.target.value)}
-                                              className="w-1/2 h-10 rounded-lg border-2 cursor-pointer"
+                                              className="w-1/2 h-10 rounded-full border-2 cursor-pointer"
                                               title="From Color"
                                           />
                                           <input
                                               type="color"
                                               value={profileBgToColor}
                                               onChange={(e) => setProfileBgToColor(e.target.value)}
-                                              className="w-1/2 h-10 rounded-lg border-2 cursor-pointer"
+                                              className="w-1/2 h-10 rounded-full border-2 cursor-pointer"
                                               title="To Color"
                                           />
                                       </div>
@@ -3151,7 +3151,7 @@ React.useEffect(() => {
                                               type="color"
                                               value={profileBanner.startsWith('#') ? profileBanner : '#cccccc'}
                                               onChange={(e) => setProfileBanner(e.target.value)}
-                                              className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                              className="w-full h-10 rounded-full border-2 cursor-pointer"
                                               title="Pick Banner Color"
                                           />
                                       ) : (
@@ -3161,7 +3161,7 @@ React.useEffect(() => {
                                               value={profileBanner}
                                               onChange={(e) => setProfileBanner(e.target.value)}
                                               placeholder="https://placehold.co/200x50/cccccc/ffffff?text=Banner"
-                                              className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                                              className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                           />
                                           <button
                                               type="button"
@@ -3183,7 +3183,7 @@ React.useEffect(() => {
                                       type="color"
                                       value={profileTextColorProfile.startsWith('#') ? profileTextColorProfile : '#000000'}
                                       onChange={(e) => setProfileTextColorProfile(e.target.value)}
-                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      className="w-full h-10 rounded-full border-2 cursor-pointer"
                                       title="Pick Text Color"
                                     />
                                   </div>
@@ -3193,21 +3193,21 @@ React.useEffect(() => {
 
                       <button
                         type="submit"
-                        className={`w-full max-w-sm ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                        className={`w-full max-w-sm ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                       >
                         save changes
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowProfileModal(false)}
-                        className={`w-full max-w-sm ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        className={`w-full max-w-sm ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className={`w-full max-w-sm mt-4 bg-red-500 text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
+                        className={`w-full max-w-sm mt-4 bg-red-500 text-white p-3 rounded-full font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
                       >
                         log out
                       </button>
@@ -3250,7 +3250,7 @@ React.useEffect(() => {
                           <button
                             key={themeName}
                             onClick={() => handleThemeChange(themeName)}
-                            className={`p-4 rounded-lg shadow-md ${themes[themeName].mainBgClass} ${themes[themeName].textColor} border-2 ${currentThemeName === themeName ? 'border-blue-500' : 'border-transparent'} flex flex-col items-center justify-center transition duration-200`}
+                            className={`p-4 rounded-full shadow-md ${themes[themeName].mainBgClass} ${themes[themeName].textColor} border-2 ${currentThemeName === themeName ? 'border-blue-500' : 'border-transparent'} flex flex-col items-center justify-center transition duration-200`}
                           >
                             <span className="font-semibold text-lg lowercase">{themes[themeName].name}</span>
                             <div className="flex gap-1 mt-2">
@@ -3262,7 +3262,7 @@ React.useEffect(() => {
                         {/* Custom Theme Button */}
                         <button
                             onClick={() => handleThemeChange('custom')}
-                            className={`p-4 rounded-lg shadow-md bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 ${currentThemeName === 'custom' ? 'border-blue-500' : 'border-transparent'} flex flex-col items-center justify-center transition duration-200`}
+                            className={`p-4 rounded-full shadow-md bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 ${currentThemeName === 'custom' ? 'border-blue-500' : 'border-transparent'} flex flex-col items-center justify-center transition duration-200`}
                         >
                             <span className="font-semibold text-lg lowercase">custom</span>
                             <div className="flex gap-1 mt-2">
@@ -3281,7 +3281,7 @@ React.useEffect(() => {
                                       type="color"
                                       value={customUIBgColor}
                                       onChange={handleCustomUIBgColorChange}
-                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      className="w-full h-10 rounded-full border-2 cursor-pointer"
                                       title="Pick UI Main Background Color"
                                   />
                               </div>
@@ -3292,7 +3292,7 @@ React.useEffect(() => {
                                       type="color"
                                       value={customUISecondaryBgColor}
                                       onChange={handleCustomUISecondaryBgColorChange}
-                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      className="w-full h-10 rounded-full border-2 cursor-pointer"
                                       title="Pick UI Secondary Background Color"
                                   />
                               </div>
@@ -3303,7 +3303,7 @@ React.useEffect(() => {
                                       type="color"
                                       value={customUITextColor}
                                       onChange={handleCustomUITextColorChange}
-                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      className="w-full h-10 rounded-full border-2 cursor-pointer"
                                       title="Pick UI Primary Text Color"
                                   />
                               </div>
@@ -3314,7 +3314,7 @@ React.useEffect(() => {
                                       type="color"
                                       value={customUISecondaryTextColor}
                                       onChange={handleCustomUISecondaryTextColorChange}
-                                      className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                      className="w-full h-10 rounded-full border-2 cursor-pointer"
                                       title="Pick UI Secondary Text Color"
                                   />
                               </div>
@@ -3341,7 +3341,7 @@ React.useEffect(() => {
                                           type="color"
                                           value={customMainBgValue}
                                           onChange={handleCustomMainBgValueChange}
-                                          className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                          className="w-full h-10 rounded-full border-2 cursor-pointer"
                                           title="Pick Main Background Color"
                                       />
                                   ) : (
@@ -3351,7 +3351,7 @@ React.useEffect(() => {
                                           value={customMainBgValue}
                                           onChange={handleCustomMainBgValueChange}
                                           placeholder="https://example.com/background.jpg"
-                                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                                          className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                       />
                                       <button
                                           type="button"
@@ -3386,7 +3386,7 @@ React.useEffect(() => {
                       <div className="mt-8 pt-4 border-t border-stone-200">
                         <h3 className={`text-xl font-bold mb-4 ${currentTheme.textColor} lowercase`}>presets</h3>
                         {['slot1', 'slot2', 'slot3'].map((slotKey) => (
-                            <div key={slotKey} className="mb-4 p-4 border rounded-lg border-stone-300">
+                            <div key={slotKey} className="mb-4 p-4 border rounded-full border-stone-300">
                                 <label className={`block text-left text-sm font-medium ${currentTheme.textColor} mb-1 lowercase`}>preset {slotKey.replace('slot', '')} name:</label>
                                 <input
                                     type="text"
@@ -3396,20 +3396,20 @@ React.useEffect(() => {
                                         [slotKey]: { ...prev[slotKey], name: e.target.value }
                                     }))}
                                     placeholder={`Name for ${slotKey}`}
-                                    className={`w-full p-2 border ${currentTheme.inputBorder} rounded-lg mb-2 outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
+                                    className={`w-full p-2 border ${currentTheme.inputBorder} rounded-full mb-2 outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor}`}
                                 />
                                 <div className="flex space-x-2">
                                     <button
                                         type="button"
                                         onClick={() => savePreset(slotKey, customThemePresets[slotKey].name)}
-                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-2 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 lowercase`}
+                                        className={`flex-1 ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-2 rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 lowercase`}
                                     >
                                         save
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => loadPreset(slotKey)}
-                                        className={`flex-1 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-2 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                                        className={`flex-1 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-2 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                                     >
                                         load
                                     </button>
@@ -3468,7 +3468,7 @@ React.useEffect(() => {
                     <button
                       type="button"
                       onClick={() => setShowChatSettingsModal(false)}
-                      className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                      className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                     >
                       close
                     </button>
@@ -3508,7 +3508,7 @@ React.useEffect(() => {
                                 value={adminTagText}
                                 onChange={handleAdminTagTextChange}
                                 placeholder="e.g., moderator"
-                                className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} lowercase`}
+                                className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} lowercase`}
                                 maxLength="10"
                             />
                         </div>
@@ -3518,7 +3518,7 @@ React.useEffect(() => {
                                 type="color"
                                 value={adminTagColor}
                                 onChange={handleAdminTagColorChange}
-                                className="w-full h-10 rounded-lg border-2 cursor-pointer"
+                                className="w-full h-10 rounded-full border-2 cursor-pointer"
                                 title="Pick Admin Tag Color"
                             />
                         </div>
@@ -3563,7 +3563,7 @@ React.useEffect(() => {
                                         value={tempProfileDecorationUrl}
                                         onChange={(e) => setTempProfileDecorationUrl(e.target.value)}
                                         placeholder="https://example.com/decoration.png (transparent png/gif)"
-                                        className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} lowercase`}
+                                        className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} lowercase`}
                                     />
                                     <button
                                         type="button"
@@ -3588,7 +3588,7 @@ React.useEffect(() => {
                                         step="5"
                                         value={tempProfileDecorationSize}
                                         onChange={(e) => setTempProfileDecorationSize(parseInt(e.target.value))}
-                                        className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer range-lg dark:bg-stone-700"
+                                        className="w-full h-2 bg-stone-200 rounded-full appearance-none cursor-pointer range-lg dark:bg-stone-700"
                                     />
                                 </div>
                                 <div className="flex space-x-2 w-full">
@@ -3598,7 +3598,7 @@ React.useEffect(() => {
                                             setTempProfileDecorationSize(100); // Reset size locally
                                             // Debounce effect will handle saving to Firestore after this change
                                         }}
-                                        className={`flex-1 bg-red-500 text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
+                                        className={`flex-1 bg-red-500 text-white p-3 rounded-full font-semibold hover:bg-red-600 transition duration-300 shadow-md lowercase`}
                                     >
                                         clear decoration
                                     </button>
@@ -3616,7 +3616,7 @@ React.useEffect(() => {
                                 placeholder="type your announcement here (max 200 characters)"
                                 maxLength="200"
                                 rows="3"
-                                className={`w-full p-3 border ${currentTheme.inputBorder} rounded-lg focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} resize-y mb-4`}
+                                className={`w-full p-3 border ${currentTheme.inputBorder} rounded-full focus:ring-2 ${currentTheme.inputFocus} outline-none ${currentTheme.inputBg} ${currentTheme.inputTextColor} resize-y mb-4`}
                                 onKeyDown={(e) => { // Added onKeyDown to prevent Enter from submitting form
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
@@ -3632,7 +3632,7 @@ React.useEffect(() => {
                                     handleSendGlobalAnnouncement(textarea.value);
                                     textarea.value = '';
                                 }}
-                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                             >
                                 send announcement
                             </button>
@@ -3643,14 +3643,14 @@ React.useEffect(() => {
 
                         <button
                             onClick={() => { setShowAdminPanelModal(false); setShowBanMenuModal(true); }}
-                            className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                            className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-full font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                         >
                             ban menu
                         </button>
                     </div>
                     <button
                       onClick={() => setShowAdminPanelModal(false)}
-                      className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
+                      className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
                     >
                       close admin panel
                     </button>
@@ -3683,13 +3683,13 @@ React.useEffect(() => {
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={confirmClearAllMessages}
-                        className={`bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition duration-300 shadow-md lowercase`}
+                        className={`bg-red-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-red-700 transition duration-300 shadow-md lowercase`}
                       >
                         yes, clear all
                       </button>
                       <button
                         onClick={cancelClearAllMessages}
-                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3707,13 +3707,13 @@ React.useEffect(() => {
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={performKickUser}
-                        className={`bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition duration-300 shadow-md lowercase`}
+                        className={`bg-red-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-red-700 transition duration-300 shadow-md lowercase`}
                       >
                         yes, kick
                       </button>
                       <button
                         onClick={cancelKickBan}
-                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3731,13 +3731,13 @@ React.useEffect(() => {
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={performBanUser}
-                        className={`bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition duration-300 shadow-md lowercase`}
+                        className={`bg-red-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-red-700 transition duration-300 shadow-md lowercase`}
                       >
                         yes, ban
                       </button>
                       <button
                         onClick={cancelKickBan}
-                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3769,13 +3769,13 @@ React.useEffect(() => {
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={performRevertBan}
-                        className={`bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 shadow-md lowercase`}
+                        className={`bg-green-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-green-700 transition duration-300 shadow-md lowercase`}
                       >
                         yes, revert
                       </button>
                       <button
                         onClick={cancelRevertBan}
-                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                        className={`${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-6 py-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                       >
                         cancel
                       </button>
@@ -3798,7 +3798,7 @@ React.useEffect(() => {
               {/* NEW: Changelog Button */}
               <button
                   onClick={() => setShowChangelogModal(true)}
-                  className={`fixed bottom-4 left-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
+                  className={`fixed bottom-4 left-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-full text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
                   title="View Changelog"
               >
                   changelog
@@ -3817,7 +3817,7 @@ React.useEffect(() => {
 {isLoggedIn && ( // Only show screensaver button if user is logged in
     <button
         onClick={handleActivateScreensaver}
-        className={`fixed bottom-4 right-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-lg text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
+        className={`fixed bottom-4 right-4 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} px-4 py-2 rounded-full text-sm font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 shadow-md lowercase`}
         title="Activate Screensaver"
     >
         screensaver
@@ -3994,7 +3994,7 @@ React.useEffect(() => {
                                     <p className={`text-sm lowercase`} style={{color: profileData.profileTextColorProfile || currentTheme.secondaryText}}>username: {profileData.displayUsername}</p>
                                     
                                     {(profileData.bio !== undefined && profileData.bio !== null) ? (
-                                        <div className={`text-left mt-4 p-3 rounded-lg bg-black/10`}> {/* bg-black/10 for subtle contrast on themed background */}
+                                        <div className={`text-left mt-4 p-3 rounded-full bg-black/10`}> {/* bg-black/10 for subtle contrast on themed background */}
                                             <p className={`text-sm font-medium lowercase mb-1`} style={{color: profileData.profileTextColorProfile || currentTheme.textColor}}>bio:</p>
                                             {profileData.bio.length > 0 ? (
                                                 <p className={`text-sm whitespace-pre-wrap`} style={{color: profileData.profileTextColorProfile || currentTheme.secondaryText}}>{profileData.bio}</p>
@@ -4016,14 +4016,14 @@ React.useEffect(() => {
                                         {isFriend ? (
                                             <button
                                                 onClick={handleOpenDmClick}
-                                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
+                                                className={`w-full ${currentTheme.buttonPrimaryBg} ${currentTheme.buttonPrimaryText} p-3 rounded-full font-semibold ${currentTheme.buttonPrimaryHover} transition duration-300 shadow-md lowercase`}
                                             >
                                                 send direct message
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={handleAddFriendClick}
-                                                className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
+                                                className={`w-full ${currentTheme.buttonSecondaryBg} ${currentTheme.buttonSecondaryText} p-3 rounded-full font-semibold ${currentTheme.buttonSecondaryHover} transition duration-300 shadow-md lowercase`}
                                             >
                                                 add friend
                                             </button>
@@ -4036,7 +4036,7 @@ React.useEffect(() => {
                         )}
                         <button
                             onClick={onClose}
-                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                         >
                             close
                         </button>
@@ -4150,7 +4150,7 @@ React.useEffect(() => {
                                         <h3 className={`text-xl font-bold mb-3 ${currentTheme.textColor} lowercase border-b pb-2 ${currentTheme.inputBorder}`}>active now</h3>
                                         <div className="space-y-3">
                                             {activeUsersList.map(user => (
-                                                <div key={user.id} className={`flex items-center p-3 rounded-lg shadow-sm lowercase ${currentTheme.otherBubbleBg}`}> {/* Updated this background */}
+                                                <div key={user.id} className={`flex items-center p-3 rounded-full shadow-sm lowercase ${currentTheme.otherBubbleBg}`}> {/* Updated this background */}
                                                     <div className="relative w-8 h-8 flex-shrink-0 mr-3 overflow-visible"> {/* Container for PFP and decoration - Added overflow-visible */}
                                                         <img
                                                             src={user.profilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
@@ -4203,7 +4203,7 @@ React.useEffect(() => {
                                         <h3 className={`text-xl font-bold mb-3 ${currentTheme.textColor} lowercase border-b pb-2 ${currentTheme.inputBorder}`}>recently active</h3>
                                         <div className="space-y-3">
                                             {recentlyActiveUsersList.map(user => (
-                                                <div key={user.id} className={`flex items-center p-3 rounded-lg shadow-sm lowercase opacity-70 ${currentTheme.chatBg}`}> {/* Updated this background */}
+                                                <div key={user.id} className={`flex items-center p-3 rounded-full shadow-sm lowercase opacity-70 ${currentTheme.chatBg}`}> {/* Updated this background */}
                                                     <div className="relative w-8 h-8 flex-shrink-0 mr-3 overflow-visible"> {/* Container for PFP and decoration - Added overflow-visible */}
                                                         <img
                                                             src={user.profilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
@@ -4257,7 +4257,7 @@ React.useEffect(() => {
                         )}
                         <button
                             onClick={onClose}
-                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                         >
                             close
                         </button>
@@ -4362,7 +4362,7 @@ React.useEffect(() => {
                                     <p className={`${currentTheme.secondaryText} mt-8`}>no users are currently banned.</p>
                                 ) : (
                                     bannedUsers.map(user => (
-                                        <div key={user.id} className={`flex items-center p-3 rounded-lg shadow-sm lowercase ${currentTheme.otherBubbleBg}`}>
+                                        <div key={user.id} className={`flex items-center p-3 rounded-full shadow-sm lowercase ${currentTheme.otherBubbleBg}`}>
                                             <div className="relative w-8 h-8 flex-shrink-0 mr-3 overflow-visible"> {/* Container for PFP and decoration - Added overflow-visible */}
                                                 <img
                                                     src={user.profilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
@@ -4410,7 +4410,7 @@ React.useEffect(() => {
                         )}
                         <button
                             onClick={onClose}
-                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                         >
                             close
                         </button>
@@ -4427,11 +4427,11 @@ React.useEffect(() => {
                         <h2 className={`text-2xl font-bold mb-6 ${currentTheme.textColor} lowercase`}>{title}</h2>
                         <p className={`${currentTheme.textColor} mb-4 lowercase text-left`}>{message}</p>
                         {imageUrl && (
-                            <img src={imageUrl} alt="Information example" className="w-full h-auto rounded-lg mb-6 object-cover" />
+                            <img src={imageUrl} alt="Information example" className="w-full h-auto rounded-full mb-6 object-cover" />
                         )}
                         <button
                             onClick={onClose}
-                            className={`w-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                            className={`w-full ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                         >
                             got it
                         </button>
@@ -4467,7 +4467,7 @@ React.useEffect(() => {
                         <h2 className={`text-3xl font-bold mb-6 ${currentTheme.textColor} lowercase text-center`}>changelog</h2>
                         <div className="flex-1 space-y-6">
                             {changes.map((change, index) => (
-                                <div key={index} className="p-4 bg-stone-100 rounded-lg shadow-sm">
+                                <div key={index} className="p-4 bg-stone-100 rounded-full shadow-sm">
                                     <h3 className={`text-xl font-bold ${currentTheme.textColor} mb-2 lowercase`}>{change.title}</h3>
                                     <p className={`${currentTheme.secondaryText} text-sm lowercase`}>{change.description}</p>
                                 </div>
@@ -4475,7 +4475,7 @@ React.useEffect(() => {
                         </div>
                         <button
                             onClick={onClose}
-                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-lg font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
+                            className={`w-full mt-6 ${currentTheme.buttonTertiaryBg} ${currentTheme.buttonTertiaryText} p-3 rounded-full font-semibold ${currentTheme.buttonTertiaryHover} transition duration-300 lowercase`}
                         >
                             close
                         </button>
@@ -4547,3 +4547,5 @@ const ScreensaverDisplay = ({ currentTheme, onDeactivate }) => {
     </script>
 </body>
 </html>
+
+
