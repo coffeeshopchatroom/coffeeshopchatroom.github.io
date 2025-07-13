@@ -2799,8 +2799,10 @@ React.useEffect(() => {
                           </p>
                         ) : (
                           messages.map((msg) => (
-<MessageItem
-                     key={msg.id}
+const prevMsg = messages[index - 1]; // Get the previous message
+            return (
+                <MessageItem
+                    key={msg.id}
                     msg={msg}
                     userId={userId}
                     appId={appId}
@@ -2821,10 +2823,7 @@ React.useEffect(() => {
                     profileDecorationUrl={profileDecorationUrl}
                     isDMActive={isDMActive}
                     prevMessage={prevMsg} // NEW PROP ADDED HERE
-                            />
-                          ))
-                        )}
-                        <div ref={messagesEndRef} />
+                />
                       </div>
                       
                       {/* Typing indicator for chatrooms */}
