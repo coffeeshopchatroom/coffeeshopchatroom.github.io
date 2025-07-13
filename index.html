@@ -261,9 +261,9 @@
             return [userId1, userId2].sort().join('_');
         };
 
-// NEW: MessageItem Component with adjusted PFP size and message indentation - START
+// NEW: Updated MessageItem Component for Discord-like Chatrooms - START
 
-const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg, myMessageBubbleText, currentTheme, profilePictureUrl, isAdmin, hoverToDeleteEnabled, onDeleteMessage, onOpenUserProfile, showAdminTag, adminTagColor, adminTagText, showOthersBubbleColors, profileDecorationUrl, isDMActive }) => {
+const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg, myMessageBubbleText, currentTheme, profilePictureUrl, isAdmin, hoverToDeleteEnabled, onDeleteMessage, onOpenUserProfile, showAdminTag, adminTagColor, adminTagText, showOthersBubbleColors, profileDecorationUrl, isDMActive, prevMessage }) => { // Added prevMessage to props
     const [isHovered, setIsHovered] = React.useState(false);
 
     // Effect to mark messages as read
@@ -305,13 +305,20 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
         pointerEvents: 'none',
     };
 
+    // --- Logic for showing header (PFP + Username/Timestamp) ---
+    const isConsecutiveFromSameSender = prevMessage &&
+                                        prevMessage.senderId === msg.senderId &&
+                                        !isDMActive; // Only apply this logic in chatrooms
+
+    const shouldShowHeader = isDMActive || !isConsecutiveFromSameSender; // Always show in DMs, or if not consecutive in chatrooms
+
     // --- Conditional Styling for DM vs Chatroom ---
     let messageContainerClasses = '';
     let messageContentWrapperClasses = ''; // New variable for the div containing username and message
     let messageBubbleStyle = {};
     let messageTextColorClass = '';
     let usernameTextColorClass = '';
-    let pfpContainerClasses = 'relative w-10 h-10 flex-shrink-0 mr-2 overflow-visible'; // MODIFIED: PFP size to w-10 h-10
+    let pfpContainerClasses = 'relative w-10 h-10 flex-shrink-0 mr-2 overflow-visible'; // PFP size to w-10 h-10
 
     if (isDMActive) {
         // DM Styling (existing bubble logic)
@@ -345,7 +352,19 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
     } else {
         // Chatroom Styling (Discord-like, no bubbles, always left-aligned)
         messageContainerClasses = `flex mb-4 items-start justify-start`; // Always left-aligned, items-start for top alignment
-        messageContentWrapperClasses = `relative group overflow-hidden pl-3`; // MODIFIED: Added pl-3 for left padding
+
+        // Adjust message content wrapper classes based on whether header is shown
+        messageContentWrapperClasses = `relative group overflow-hidden`;
+        if (!shouldShowHeader) {
+            // For compact messages, add left margin to align with text of previous message
+            // PFP is w-10 (40px) + mr-2 (8px) = 48px. Let's use ml-12 (48px) to align.
+            messageContentWrapperClasses += ` ml-12`;
+        } else {
+            // If header is shown, the PFP container already provides the initial left offset.
+            // Add a small left padding to the message content itself for better spacing from PFP.
+            messageContentWrapperClasses += ` pl-3`;
+        }
+
         messageBubbleStyle = {}; // No background style on the "bubble" div
 
         // Text colors for chatroom messages are from theme, not individual bubble colors
@@ -361,13 +380,13 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Profile picture (always on the left for chatrooms, or for other users in DMs) */}
-            {(isDMActive && msg.senderId !== userId) || !isDMActive ? ( // Show PFP if DM and not self, OR if it's a chatroom
-                <div className={pfpContainerClasses}> {/* Using new pfpContainerClasses */}
+            {shouldShowHeader && ((isDMActive && msg.senderId !== userId) || (!isDMActive)) ? ( // Show PFP if header is needed AND (it's a DM and not self, OR it's a chatroom)
+                <div className={pfpContainerClasses}>
                     <img
-                        src={msg.senderProfilePictureUrl || 'https://placehold.co/40x40/cccccc/ffffff?text=P'} // MODIFIED: PFP size in placeholder
+                        src={msg.senderProfilePictureUrl || 'https://placehold.co/40x40/cccccc/ffffff?text=P'}
                         alt="PFP"
                         className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
-                        onError={(e) => e.target.src='https://placehold.co/40x40/cccccc/ffffff?text=P'} // MODIFIED: PFP size in fallback
+                        onError={(e) => e.target.src='https://placehold.co/40x40/cccccc/ffffff?text=P'}
                         onClick={() => onOpenUserProfile(msg.senderId)}
                     />
                     {msg.senderProfileDecorationUrl && (
@@ -390,30 +409,33 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
                     <div className={`absolute inset-0 bg-black/60 transition-opacity duration-300 pointer-events-none ${isHovered ? 'opacity-100' : 'opacity-0'} rounded-xl`}></div>
                 )}
 
-                <div className={`font-semibold text-sm mb-1 lowercase relative z-10`} style={{color: usernameTextColorClass}}>
-                    {/* Display username/display name for sender */}
-                    <span
-                        className="cursor-pointer hover:underline"
-                        onClick={() => onOpenUserProfile(msg.senderId)}
-                    >
-                        {msg.senderDisplayName || msg.senderUsername || 'anonymous'}
-                    </span>
-                    {/* Admin Tag */}
-                    {msg.isAdmin && showAdminTag && (
+                {/* Username/Timestamp Header (only shown if shouldShowHeader is true) */}
+                {shouldShowHeader && (
+                    <div className={`font-semibold text-sm mb-1 lowercase relative z-10`} style={{color: usernameTextColorClass}}>
+                        {/* Display username/display name for sender */}
                         <span
-                            className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold uppercase"
-                            style={{ backgroundColor: adminTagColor, color: getContrastingTextColor(adminTagColor) }}
+                            className="cursor-pointer hover:underline"
+                            onClick={() => onOpenUserProfile(msg.senderId)}
                         >
-                            {adminTagText}
+                            {msg.senderDisplayName || msg.senderUsername || 'anonymous'}
                         </span>
-                    )}
-                    {/* Timestamp for chatrooms (next to username) */}
-                    {!isDMActive && (
-                        <span className={`ml-2 text-xs opacity-80`} style={{color: currentTheme.secondaryText}}>
-                            {formattedTime}
-                        </span>
-                    )}
-                </div>
+                        {/* Admin Tag */}
+                        {msg.isAdmin && showAdminTag && (
+                            <span
+                                className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold uppercase"
+                                style={{ backgroundColor: adminTagColor, color: getContrastingTextColor(adminTagColor) }}
+                            >
+                                {adminTagText}
+                            </span>
+                        )}
+                        {/* Timestamp for chatrooms (next to username) */}
+                        {!isDMActive && (
+                            <span className={`ml-2 text-xs opacity-80`} style={{color: currentTheme.secondaryText}}>
+                                {formattedTime}
+                            </span>
+                        )}
+                    </div>
+                )}
                 <p className="text-base break-words relative z-10" style={{color: messageTextColorClass}}>{msg.text}</p>
                 {/* Timestamp for DMs (below message) */}
                 {isDMActive && (
@@ -435,12 +457,12 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
             </div>
             {/* Profile picture for current user (right side, only in DMs) */}
             {isDMActive && msg.senderId === userId && profilePictureUrl && (
-                <div className={pfpContainerClasses}> {/* Using new pfpContainerClasses */}
+                <div className={pfpContainerClasses}>
                     <img
                         src={profilePictureUrl}
                         alt="PFP"
                         className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
-                        onError={(e) => e.target.src='https://placehold.co/40x40/cccccc/ffffff?text=P'} // MODIFIED: PFP size in fallback
+                        onError={(e) => e.target.src='https://placehold.co/40x40/cccccc/ffffff?text=P'}
                         onClick={() => onOpenUserProfile(msg.senderId)}
                     />
                     {profileDecorationUrl && (
@@ -457,8 +479,7 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
     );
 };
 
-// NEW: MessageItem Component with adjusted PFP size and message indentation - END
-
+// NEW: Updated MessageItem Component for Discord-like Chatrooms - END
         const App = () => {
           const [user, setUser] = React.useState(null); // firebase user object
           const [userId, setUserId] = React.useState(''); // firebase uid or anonymous id
@@ -2779,25 +2800,27 @@ React.useEffect(() => {
                         ) : (
                           messages.map((msg) => (
 <MessageItem
-  key={msg.id}
-  msg={msg}
-  userId={userId}
-  appId={appId}
-  activeRoomCode={activeRoomCode}
-  db={db}
-  myMessageBubbleBg={myMessageBubbleBg}
-  myBubbleTextColor={myBubbleTextColor}
-  currentTheme={currentTheme}
-  profilePictureUrl={profilePictureUrl}
-  isAdmin={isAdmin}
-  hoverToDeleteEnabled={hoverToDeleteEnabled}
-  onDeleteMessage={handleDeleteMessage}
-  onOpenUserProfile={handleOpenUserProfile}
-  showAdminTag={showAdminTag}
-  adminTagColor={adminTagColor}
-  adminTagText={adminTagText}
-  showOthersBubbleColors={showOthersBubbleColors}
-  isDMActive={isDMActive} // NEW PROP ADDED HERE
+                     key={msg.id}
+                    msg={msg}
+                    userId={userId}
+                    appId={appId}
+                    activeRoomCode={activeRoomCode}
+                    db={db}
+                    myMessageBubbleBg={myMessageBubbleBg}
+                    myBubbleTextColor={myBubbleTextColor}
+                    currentTheme={currentTheme}
+                    profilePictureUrl={profilePictureUrl}
+                    isAdmin={isAdmin}
+                    hoverToDeleteEnabled={hoverToDeleteEnabled}
+                    onDeleteMessage={handleDeleteMessage}
+                    onOpenUserProfile={handleOpenUserProfile}
+                    showAdminTag={showAdminTag}
+                    adminTagColor={adminTagColor}
+                    adminTagText={adminTagText}
+                    showOthersBubbleColors={showOthersBubbleColors}
+                    profileDecorationUrl={profileDecorationUrl}
+                    isDMActive={isDMActive}
+                    prevMessage={prevMsg} // NEW PROP ADDED HERE
                             />
                           ))
                         )}
