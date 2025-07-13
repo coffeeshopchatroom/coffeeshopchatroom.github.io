@@ -261,177 +261,201 @@
             return [userId1, userId2].sort().join('_');
         };
 
-        // New MessageItem component
-        const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg, myMessageBubbleText, currentTheme, profilePictureUrl, isAdmin, hoverToDeleteEnabled, onDeleteMessage, onOpenUserProfile, showAdminTag, adminTagColor, adminTagText, showOthersBubbleColors }) => {
-            const [isHovered, setIsHovered] = React.useState(false);
+// NEW: Updated MessageItem Component - START
 
-            // Effect to mark messages as read
-            React.useEffect(() => {
-                if (msg.senderId !== userId && (!msg.readBy || !msg.readBy[userId])) {
-                    // Check if activeRoomCode corresponds to a DM (simple check for now, can be improved)
-                    const isDM = activeRoomCode.includes('_'); 
-                    const path = isDM ? `artifacts/${appId}/public/data/dmRooms/${activeRoomCode}/messages` : `artifacts/${appId}/public/data/chatRooms/${activeRoomCode}/messages`;
-                    const messageDocRef = doc(db, path, msg.id);
+const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg, myMessageBubbleText, currentTheme, profilePictureUrl, isAdmin, hoverToDeleteEnabled, onDeleteMessage, onOpenUserProfile, showAdminTag, adminTagColor, adminTagText, showOthersBubbleColors, profileDecorationUrl, isDMActive }) => { // Added isDMActive to props
+    const [isHovered, setIsHovered] = React.useState(false);
 
-                    updateDoc(messageDocRef, { [`readBy.${userId}`]: true })
-                        .catch(error => console.error("Error marking message as read:", error));
-                }
-            }, [msg.id, msg.senderId, msg.readBy, userId, appId, activeRoomCode, db]);
+    // Effect to mark messages as read
+    React.useEffect(() => {
+        if (msg.senderId !== userId && (!msg.readBy || !msg.readBy[userId])) {
+            const path = isDMActive ? `artifacts/${appId}/public/data/dmRooms/${activeRoomCode}/messages` : `artifacts/${appId}/public/data/chatRooms/${activeRoomCode}/messages`;
+            const messageDocRef = doc(db, path, msg.id);
 
-            // Determine read indicator for current user's messages
-            let readIndicator = '';
-            if (msg.senderId === userId) {
-                const readers = Object.keys(msg.readBy || {}).filter(id => id !== userId);
-                if (readers.length > 0) {
-                    readIndicator = '✓✓'; // Read by at least one other person
-                } else {
-                    readIndicator = '✓'; // Sent, but not yet read by others
-                }
-            }
+            updateDoc(messageDocRef, { [`readBy.${userId}`]: true })
+                .catch(error => console.error("Error marking message as read:", error));
+        }
+    }, [msg.id, msg.senderId, msg.readBy, userId, appId, activeRoomCode, db, isDMActive]);
 
-            // Format time without seconds
-            const formattedTime = msg.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Determine read indicator for current user's messages
+    let readIndicator = '';
+    if (msg.senderId === userId) {
+        const readers = Object.keys(msg.readBy || {}).filter(id => id !== userId);
+        if (readers.length > 0) {
+            readIndicator = '✓✓'; // Read by at least one other person
+        } else {
+            readIndicator = '✓'; // Sent, but not yet read by others
+        }
+    }
 
-            // Apply showOthersBubbleColors logic
-            let bubbleBgStyle = {};
-            let bubbleBgClass = '';
-            let bubbleTextColorClass = '';
+    // Format time without seconds
+    const formattedTime = msg.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            if (msg.senderId === userId) {
-                // Always use my own colors for my messages
-                bubbleBgStyle = myMessageBubbleBg.startsWith('#') ? { backgroundColor: myMessageBubbleBg } : {};
-                bubbleBgClass = myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg;
-                bubbleTextColorClass = myMessageBubbleText;
+    // Calculate dynamic decoration style
+    const decorationSize = msg.senderProfileDecorationSize || 100; // Default to 100%
+    const decorationStyle = {
+        position: 'absolute',
+        width: `${decorationSize}%`,
+        height: `${decorationSize}%`,
+        top: '50%', // Center vertically
+        left: '50%', // Center horizontally
+        transform: 'translate(-50%, -50%)', // Adjust for element's own size
+        objectFit: 'contain',
+        zIndex: 20,
+        pointerEvents: 'none',
+    };
+
+    // --- Conditional Styling for DM vs Chatroom ---
+    let messageContainerClasses = '';
+    let messageBubbleClasses = '';
+    let messageBubbleStyle = {};
+    let messageTextColorClass = '';
+    let usernameTextColorClass = '';
+
+    if (isDMActive) {
+        // DM Styling (existing bubble logic)
+        messageContainerClasses = `flex mb-4 items-end ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`;
+        messageBubbleClasses = `p-3 rounded-xl shadow-sm max-w-[70%] ${msg.senderId === userId ? 'rounded-br-none' : 'rounded-bl-none'} relative group overflow-hidden`;
+
+        if (msg.senderId === userId) {
+            messageBubbleStyle = myMessageBubbleBg.startsWith('#') ? { backgroundColor: myMessageBubbleBg } : {};
+            messageBubbleClasses += ` ${myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg}`;
+            messageTextColorClass = myMessageBubbleText;
+            usernameTextColorClass = myMessageBubbleText; // Use same for username in DM
+        } else {
+            if (showOthersBubbleColors) {
+                messageBubbleStyle = msg.senderBubbleColor && msg.senderBubbleColor.startsWith('#')
+                    ? { backgroundColor: msg.senderBubbleColor }
+                    : {};
+                messageBubbleClasses += ` ${msg.senderBubbleColor && !msg.senderBubbleColor.startsWith('#')
+                    ? msg.senderBubbleColor
+                    : currentTheme.otherBubbleBg}`;
+                messageTextColorClass = msg.senderBubbleColor && msg.senderBubbleColor.startsWith('#')
+                    ? getContrastingTextColor(msg.senderBubbleColor)
+                    : currentTheme.otherBubbleText;
+                usernameTextColorClass = messageTextColorClass; // Use same for username in DM
             } else {
-                // For others' messages, apply toggle logic
-                if (showOthersBubbleColors) {
-                    bubbleBgStyle = msg.senderBubbleColor && msg.senderBubbleColor.startsWith('#')
-                        ? { backgroundColor: msg.senderBubbleColor }
-                        : {};
-                    bubbleBgClass = msg.senderBubbleColor && !msg.senderBubbleColor.startsWith('#')
-                        ? msg.senderBubbleColor
-                        : currentTheme.otherBubbleBg;
-                    bubbleTextColorClass = msg.senderBubbleColor && msg.senderBubbleColor.startsWith('#')
-                        ? getContrastingTextColor(msg.senderBubbleColor)
-                        : currentTheme.otherBubbleText;
-                } else {
-                    // If toggle is off, force others' bubbles to be my bubble color
-                    bubbleBgStyle = myMessageBubbleBg.startsWith('#') ? { backgroundColor: myMessageBubbleBg } : {};
-                    bubbleBgClass = myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg;
-                    bubbleTextColorClass = myMessageBubbleText; // Use my bubble text color for their bubbles too
-                }
+                messageBubbleStyle = myMessageBubbleBg.startsWith('#') ? { backgroundColor: myMessageBubbleBg } : {};
+                messageBubbleClasses += ` ${myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg}`;
+                messageTextColorClass = myMessageBubbleText;
+                usernameTextColorClass = myMessageBubbleText; // Use same for username in DM
             }
-            // FIX END
+        }
+    } else {
+        // Chatroom Styling (Discord-like, no bubbles, always left-aligned)
+        messageContainerClasses = `flex mb-4 items-start justify-start`; // Always left-aligned, items-start for top alignment
+        messageBubbleClasses = `relative group overflow-hidden`; // No padding, no specific rounding, no shadow for the "bubble" itself
+        messageBubbleStyle = {}; // No background style on the "bubble" div
 
-            // Calculate dynamic decoration style
-            const decorationSize = msg.senderProfileDecorationSize || 100; // Default to 100%
-            const decorationStyle = {
-                position: 'absolute',
-                width: `${decorationSize}%`,
-                height: `${decorationSize}%`,
-                top: '50%', // Center vertically
-                left: '50%', // Center horizontally
-                transform: 'translate(-50%, -50%)', // Adjust for element's own size
-                objectFit: 'contain',
-                zIndex: 20,
-                pointerEvents: 'none',
-            };
+        // Text colors for chatroom messages are from theme, not individual bubble colors
+        messageTextColorClass = currentTheme.textColor;
+        usernameTextColorClass = currentTheme.textColor;
+    }
 
-            return (
-                <div
-                    key={msg.id}
-                    className={`flex mb-4 items-end ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
-                    {/* Profile picture for other users (left side) */}
-                    {msg.senderId !== userId && msg.senderProfilePictureUrl && (
-                        <div className="relative w-8 h-8 flex-shrink-0 mr-2 overflow-visible"> {/* Added overflow-visible */}
-                            <img
-                                src={msg.senderProfilePictureUrl}
-                                alt="PFP"
-                                className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
-                                onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'} // Fallback PFP
-                                onClick={() => onOpenUserProfile(msg.senderId)}
-                            />
-                            {msg.senderProfileDecorationUrl && (
-                                <img
-                                    src={msg.senderProfileDecorationUrl}
-                                    alt="Decoration"
-                                    style={decorationStyle}
-                                    onError={(e) => e.target.style.display='none'} // Hide if error loading decoration
-                                />
-                            )}
-                        </div>
-                    )}
-                    <div
-                        className={`p-3 rounded-xl shadow-sm max-w-[70%] ${bubbleBgClass} ${
-                            msg.senderId === userId ? 'rounded-br-none' : 'rounded-bl-none'
-                        } relative group overflow-hidden`} // Added overflow-hidden for cleaner overlay
-                        style={bubbleBgStyle}
-                    >
-                        {/* Overlay for dimming effect */}
-                        {isAdmin && hoverToDeleteEnabled && (
-                            <div className={`absolute inset-0 bg-black/60 transition-opacity duration-300 pointer-events-none ${isHovered ? 'opacity-100' : 'opacity-0'} rounded-xl`}></div>
-                        )}
-
-                        <div className={`font-semibold text-sm mb-1 lowercase relative z-10`} style={{color: bubbleTextColorClass}}>
-                            {/* Display username/display name for sender */}
-                            <span
-                                className="cursor-pointer hover:underline"
-                                onClick={() => onOpenUserProfile(msg.senderId)}
-                            >
-                                {msg.senderDisplayName || msg.senderUsername || 'anonymous'}
-                            </span>
-                            {/* Admin Tag */}
-                            {msg.isAdmin && showAdminTag && ( // Only show if isAdmin AND showAdminTag is true
-                                <span
-                                    className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold uppercase"
-                                    style={{ backgroundColor: adminTagColor, color: getContrastingTextColor(adminTagColor) }} // Apply dynamic color
-                                >
-                                    {adminTagText}
-                                </span>
-                            )}
-                        </div>
-                        <p className="text-base break-words relative z-10">{msg.text}</p>
-                        <p className={`flex items-center text-xs text-right opacity-80 mt-1 lowercase relative z-10`} style={{color: bubbleTextColorClass}}>
-                            {formattedTime} {readIndicator && <span className="ml-1">{readIndicator}</span>}
-                        </p>
-
-                        {/* Trash icon for admin to delete messages */}
-                        {isAdmin && hoverToDeleteEnabled && (
-                            <button
-                                onClick={() => onDeleteMessage(msg.id)}
-                                className={`absolute inset-0 flex items-center justify-center text-white text-xl transition-opacity duration-300 z-20 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                                title="Delete Message"
-                            >
-                                <i className="fas fa-trash-alt"></i>
-                            </button>
-                        )}
-                    </div>
-                    {/* Profile picture for current user (right side) */}
-                    {msg.senderId === userId && profilePictureUrl && (
-                        <div className="relative w-8 h-8 flex-shrink-0 ml-2 overflow-visible"> {/* Added overflow-visible */}
-                            <img
-                                src={profilePictureUrl}
-                                alt="PFP"
-                                className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
-                                onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'} // Fallback PFP
-                                onClick={() => onOpenUserProfile(msg.senderId)}
-                            />
-                            {msg.senderProfileDecorationUrl && (
-                                <img
-                                    src={profileDecorationUrl}
-                                    alt="Decoration"
-                                    style={decorationStyle}
-                                    onError={(e) => e.target.style.display='none'} // Hide if error loading decoration
-                                />
-                            )}
-                        </div>
+    return (
+        <div
+            key={msg.id}
+            className={messageContainerClasses}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* Profile picture (always on the left for chatrooms, or for other users in DMs) */}
+            {(isDMActive && msg.senderId !== userId) || !isDMActive ? ( // Show PFP if DM and not self, OR if it's a chatroom
+                <div className="relative w-8 h-8 flex-shrink-0 mr-2 overflow-visible">
+                    <img
+                        src={msg.senderProfilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
+                        alt="PFP"
+                        className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
+                        onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'}
+                        onClick={() => onOpenUserProfile(msg.senderId)}
+                    />
+                    {msg.senderProfileDecorationUrl && (
+                        <img
+                            src={msg.senderProfileDecorationUrl}
+                            alt="Decoration"
+                            style={decorationStyle}
+                            onError={(e) => e.target.style.display='none'}
+                        />
                     )}
                 </div>
-            );
-        };
+            ) : null}
+
+            <div
+                className={messageBubbleClasses} // This div acts as the message content wrapper
+                style={messageBubbleStyle}
+            >
+                {/* Overlay for dimming effect (only for DMs with bubbles) */}
+                {isDMActive && isAdmin && hoverToDeleteEnabled && (
+                    <div className={`absolute inset-0 bg-black/60 transition-opacity duration-300 pointer-events-none ${isHovered ? 'opacity-100' : 'opacity-0'} rounded-xl`}></div>
+                )}
+
+                <div className={`font-semibold text-sm mb-1 lowercase relative z-10`} style={{color: usernameTextColorClass}}>
+                    {/* Display username/display name for sender */}
+                    <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => onOpenUserProfile(msg.senderId)}
+                    >
+                        {msg.senderDisplayName || msg.senderUsername || 'anonymous'}
+                    </span>
+                    {/* Admin Tag */}
+                    {msg.isAdmin && showAdminTag && (
+                        <span
+                            className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold uppercase"
+                            style={{ backgroundColor: adminTagColor, color: getContrastingTextColor(adminTagColor) }}
+                        >
+                            {adminTagText}
+                        </span>
+                    )}
+                    {/* Timestamp for chatrooms (next to username) */}
+                    {!isDMActive && (
+                        <span className={`ml-2 text-xs opacity-80`} style={{color: currentTheme.secondaryText}}>
+                            {formattedTime}
+                        </span>
+                    )}
+                </div>
+                <p className="text-base break-words relative z-10" style={{color: messageTextColorClass}}>{msg.text}</p>
+                {/* Timestamp for DMs (below message) */}
+                {isDMActive && (
+                    <p className={`flex items-center text-xs text-right opacity-80 mt-1 lowercase relative z-10`} style={{color: messageTextColorClass}}>
+                        {formattedTime} {readIndicator && <span className="ml-1">{readIndicator}</span>}
+                    </p>
+                )}
+
+                {/* Trash icon for admin to delete messages */}
+                {isAdmin && hoverToDeleteEnabled && (
+                    <button
+                        onClick={() => onDeleteMessage(msg.id)}
+                        className={`absolute inset-0 flex items-center justify-center text-white text-xl transition-opacity duration-300 z-20 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                        title="Delete Message"
+                    >
+                        <i className="fas fa-trash-alt"></i>
+                    </button>
+                )}
+            </div>
+            {/* Profile picture for current user (right side, only in DMs) */}
+            {isDMActive && msg.senderId === userId && profilePictureUrl && (
+                <div className="relative w-8 h-8 flex-shrink-0 ml-2 overflow-visible">
+                    <img
+                        src={profilePictureUrl}
+                        alt="PFP"
+                        className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
+                        onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'}
+                        onClick={() => onOpenUserProfile(msg.senderId)}
+                    />
+                    {profileDecorationUrl && (
+                        <img
+                            src={profileDecorationUrl}
+                            alt="Decoration"
+                            style={decorationStyle}
+                            onError={(e) => e.target.style.display='none'}
+                        />
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+// NEW: Updated MessageItem Component - END
 
 
         const App = () => {
@@ -2753,25 +2777,27 @@ React.useEffect(() => {
                           </p>
                         ) : (
                           messages.map((msg) => (
-                            <MessageItem
-                              key={msg.id}
-                              msg={msg}
-                              userId={userId}
-                              appId={appId}
-                              activeRoomCode={activeRoomCode}
-                              db={db}
-                              myMessageBubbleBg={myMessageBubbleBg}
-                              myBubbleTextColor={myBubbleTextColor}
-                              currentTheme={currentTheme}
-                              profilePictureUrl={profilePictureUrl}
-                              isAdmin={isAdmin}
-                              hoverToDeleteEnabled={hoverToDeleteEnabled}
-                              onDeleteMessage={handleDeleteMessage}
-                              onOpenUserProfile={handleOpenUserProfile}
-                              showAdminTag={showAdminTag} // Pass new props
-                              adminTagColor={adminTagColor} // Pass new props
-                              adminTagText={adminTagText} // Pass new props
-                              showOthersBubbleColors={showOthersBubbleColors} // Pass new prop
+<MessageItem
+  key={msg.id}
+  msg={msg}
+  userId={userId}
+  appId={appId}
+  activeRoomCode={activeRoomCode}
+  db={db}
+  myMessageBubbleBg={myMessageBubbleBg}
+  myBubbleTextColor={myBubbleTextColor}
+  currentTheme={currentTheme}
+  profilePictureUrl={profilePictureUrl}
+  isAdmin={isAdmin}
+  hoverToDeleteEnabled={hoverToDeleteEnabled}
+  onDeleteMessage={handleDeleteMessage}
+  onOpenUserProfile={handleOpenUserProfile}
+  showAdminTag={showAdminTag}
+  adminTagColor={adminTagColor}
+  adminTagText={adminTagText}
+  showOthersBubbleColors={showOthersBubbleColors}
+  isDMActive={isDMActive} // NEW PROP ADDED HERE
+/>
                             />
                           ))
                         )}
@@ -2881,26 +2907,27 @@ React.useEffect(() => {
                                     </p>
                                 ) : (
                                     messages.map((msg) => (
-                                        <MessageItem
-                                            key={msg.id}
-                                            msg={msg}
-                                            userId={userId}
-                                            appId={appId}
-                                            activeRoomCode={activeRoomCode}
-                                            db={db}
-                                            myMessageBubbleBg={myMessageBubbleBg}
-                                            myBubbleTextColor={myBubbleTextColor}
-                                            currentTheme={currentTheme}
-                                            profilePictureUrl={profilePictureUrl}
-                                            isAdmin={isAdmin}
-                                            hoverToDeleteEnabled={hoverToDeleteEnabled}
-                                            onDeleteMessage={handleDeleteMessage}
-                                            onOpenUserProfile={handleOpenUserProfile}
-                                            showAdminTag={showAdminTag} // Pass new props
-                                            adminTagColor={adminTagColor} // Pass new props
-                                            adminTagText={adminTagText} // Pass new props
-                                            showOthersBubbleColors={showOthersBubbleColors} // Pass new prop
-                                        />
+                                       <MessageItem
+  key={msg.id}
+  msg={msg}
+  userId={userId}
+  appId={appId}
+  activeRoomCode={activeRoomCode}
+  db={db}
+  myMessageBubbleBg={myMessageBubbleBg}
+  myBubbleTextColor={myBubbleTextColor}
+  currentTheme={currentTheme}
+  profilePictureUrl={profilePictureUrl}
+  isAdmin={isAdmin}
+  hoverToDeleteEnabled={hoverToDeleteEnabled}
+  onDeleteMessage={handleDeleteMessage}
+  onOpenUserProfile={handleOpenUserProfile}
+  showAdminTag={showAdminTag}
+  adminTagColor={adminTagColor}
+  adminTagText={adminTagText}
+  showOthersBubbleColors={showOthersBubbleColors}
+  isDMActive={isDMActive} // NEW PROP ADDED HERE
+/>
                                     ))
                                 )}
                                 <div ref={messagesEndRef} />
