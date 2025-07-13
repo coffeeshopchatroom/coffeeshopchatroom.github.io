@@ -2798,8 +2798,7 @@ React.useEffect(() => {
                             no messages yet. be the first to send one!
                           </p>
                         ) : (
-                          messages.map((msg) => (
-       {messages.map((msg, index) => {
+           messages.map((msg, index) => {
             const prevMsg = messages[index - 1]; // Get the previous message
             return (
                 <MessageItem
