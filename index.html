@@ -2799,7 +2799,8 @@ React.useEffect(() => {
                           </p>
                         ) : (
                           messages.map((msg) => (
-const prevMsg = messages[index - 1]; // Get the previous message
+       {messages.map((msg, index) => {
+            const prevMsg = messages[index - 1]; // Get the previous message
             return (
                 <MessageItem
                     key={msg.id}
@@ -2824,6 +2825,9 @@ const prevMsg = messages[index - 1]; // Get the previous message
                     isDMActive={isDMActive}
                     prevMessage={prevMsg} // NEW PROP ADDED HERE
                 />
+                          ))
+                        )}
+                        <div ref={messagesEndRef} />
                       </div>
                       
                       {/* Typing indicator for chatrooms */}
