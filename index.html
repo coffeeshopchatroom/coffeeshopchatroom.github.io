@@ -261,9 +261,9 @@
             return [userId1, userId2].sort().join('_');
         };
 
-// NEW: Updated MessageItem Component - START
+// NEW: MessageItem Component with adjusted PFP size and message indentation - START
 
-const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg, myMessageBubbleText, currentTheme, profilePictureUrl, isAdmin, hoverToDeleteEnabled, onDeleteMessage, onOpenUserProfile, showAdminTag, adminTagColor, adminTagText, showOthersBubbleColors, profileDecorationUrl, isDMActive }) => { // Added isDMActive to props
+const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg, myMessageBubbleText, currentTheme, profilePictureUrl, isAdmin, hoverToDeleteEnabled, onDeleteMessage, onOpenUserProfile, showAdminTag, adminTagColor, adminTagText, showOthersBubbleColors, profileDecorationUrl, isDMActive }) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     // Effect to mark messages as read
@@ -307,19 +307,20 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
 
     // --- Conditional Styling for DM vs Chatroom ---
     let messageContainerClasses = '';
-    let messageBubbleClasses = '';
+    let messageContentWrapperClasses = ''; // New variable for the div containing username and message
     let messageBubbleStyle = {};
     let messageTextColorClass = '';
     let usernameTextColorClass = '';
+    let pfpContainerClasses = 'relative w-10 h-10 flex-shrink-0 mr-2 overflow-visible'; // MODIFIED: PFP size to w-10 h-10
 
     if (isDMActive) {
         // DM Styling (existing bubble logic)
         messageContainerClasses = `flex mb-4 items-end ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`;
-        messageBubbleClasses = `p-3 rounded-xl shadow-sm max-w-[70%] ${msg.senderId === userId ? 'rounded-br-none' : 'rounded-bl-none'} relative group overflow-hidden`;
+        messageContentWrapperClasses = `p-3 rounded-xl shadow-sm max-w-[70%] ${msg.senderId === userId ? 'rounded-br-none' : 'rounded-bl-none'} relative group overflow-hidden`;
 
         if (msg.senderId === userId) {
             messageBubbleStyle = myMessageBubbleBg.startsWith('#') ? { backgroundColor: myMessageBubbleBg } : {};
-            messageBubbleClasses += ` ${myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg}`;
+            messageContentWrapperClasses += ` ${myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg}`;
             messageTextColorClass = myMessageBubbleText;
             usernameTextColorClass = myMessageBubbleText; // Use same for username in DM
         } else {
@@ -327,7 +328,7 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
                 messageBubbleStyle = msg.senderBubbleColor && msg.senderBubbleColor.startsWith('#')
                     ? { backgroundColor: msg.senderBubbleColor }
                     : {};
-                messageBubbleClasses += ` ${msg.senderBubbleColor && !msg.senderBubbleColor.startsWith('#')
+                messageContentWrapperClasses += ` ${msg.senderBubbleColor && !msg.senderBubbleColor.startsWith('#')
                     ? msg.senderBubbleColor
                     : currentTheme.otherBubbleBg}`;
                 messageTextColorClass = msg.senderBubbleColor && msg.senderBubbleColor.startsWith('#')
@@ -336,7 +337,7 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
                 usernameTextColorClass = messageTextColorClass; // Use same for username in DM
             } else {
                 messageBubbleStyle = myMessageBubbleBg.startsWith('#') ? { backgroundColor: myMessageBubbleBg } : {};
-                messageBubbleClasses += ` ${myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg}`;
+                messageContentWrapperClasses += ` ${myMessageBubbleBg.startsWith('#') ? '' : myMessageBubbleBg}`;
                 messageTextColorClass = myMessageBubbleText;
                 usernameTextColorClass = myMessageBubbleText; // Use same for username in DM
             }
@@ -344,7 +345,7 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
     } else {
         // Chatroom Styling (Discord-like, no bubbles, always left-aligned)
         messageContainerClasses = `flex mb-4 items-start justify-start`; // Always left-aligned, items-start for top alignment
-        messageBubbleClasses = `relative group overflow-hidden`; // No padding, no specific rounding, no shadow for the "bubble" itself
+        messageContentWrapperClasses = `relative group overflow-hidden pl-3`; // MODIFIED: Added pl-3 for left padding
         messageBubbleStyle = {}; // No background style on the "bubble" div
 
         // Text colors for chatroom messages are from theme, not individual bubble colors
@@ -361,12 +362,12 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
         >
             {/* Profile picture (always on the left for chatrooms, or for other users in DMs) */}
             {(isDMActive && msg.senderId !== userId) || !isDMActive ? ( // Show PFP if DM and not self, OR if it's a chatroom
-                <div className="relative w-8 h-8 flex-shrink-0 mr-2 overflow-visible">
+                <div className={pfpContainerClasses}> {/* Using new pfpContainerClasses */}
                     <img
-                        src={msg.senderProfilePictureUrl || 'https://placehold.co/32x32/cccccc/ffffff?text=P'}
+                        src={msg.senderProfilePictureUrl || 'https://placehold.co/40x40/cccccc/ffffff?text=P'} // MODIFIED: PFP size in placeholder
                         alt="PFP"
                         className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
-                        onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'}
+                        onError={(e) => e.target.src='https://placehold.co/40x40/cccccc/ffffff?text=P'} // MODIFIED: PFP size in fallback
                         onClick={() => onOpenUserProfile(msg.senderId)}
                     />
                     {msg.senderProfileDecorationUrl && (
@@ -381,7 +382,7 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
             ) : null}
 
             <div
-                className={messageBubbleClasses} // This div acts as the message content wrapper
+                className={messageContentWrapperClasses} // Using new messageContentWrapperClasses
                 style={messageBubbleStyle}
             >
                 {/* Overlay for dimming effect (only for DMs with bubbles) */}
@@ -434,12 +435,12 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
             </div>
             {/* Profile picture for current user (right side, only in DMs) */}
             {isDMActive && msg.senderId === userId && profilePictureUrl && (
-                <div className="relative w-8 h-8 flex-shrink-0 ml-2 overflow-visible">
+                <div className={pfpContainerClasses}> {/* Using new pfpContainerClasses */}
                     <img
                         src={profilePictureUrl}
                         alt="PFP"
                         className="w-full h-full rounded-full object-cover cursor-pointer relative z-10"
-                        onError={(e) => e.target.src='https://placehold.co/32x32/cccccc/ffffff?text=P'}
+                        onError={(e) => e.target.src='https://placehold.co/40x40/cccccc/ffffff?text=P'} // MODIFIED: PFP size in fallback
                         onClick={() => onOpenUserProfile(msg.senderId)}
                     />
                     {profileDecorationUrl && (
@@ -455,8 +456,8 @@ const MessageItem = ({ msg, userId, appId, activeRoomCode, db, myMessageBubbleBg
         </div>
     );
 };
-// NEW: Updated MessageItem Component - END
 
+// NEW: MessageItem Component with adjusted PFP size and message indentation - END
 
         const App = () => {
           const [user, setUser] = React.useState(null); // firebase user object
