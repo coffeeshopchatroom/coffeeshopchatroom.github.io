@@ -2907,7 +2907,7 @@ React.useEffect(() => {
                                     </p>
                                 ) : (
                                     messages.map((msg) => (
-                                       <MessageItem
+                                        <MessageItem
   key={msg.id}
   msg={msg}
   userId={userId}
@@ -2926,8 +2926,8 @@ React.useEffect(() => {
   adminTagColor={adminTagColor}
   adminTagText={adminTagText}
   showOthersBubbleColors={showOthersBubbleColors}
-  isDMActive={isDMActive} // NEW PROP ADDED HERE
-/>
+  isDMActive={isDMActive} 
+                                        />
                                     ))
                                 )}
                                 <div ref={messagesEndRef} />
