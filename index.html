@@ -2777,34 +2777,6 @@ React.useEffect(() => {
                             no messages yet. be the first to send one!
                           </p>
                         ) : (
-<<<<<<< HEAD
-           {messages.map((msg, index) => {
-            const prevMsg = messages[index - 1]; // Get the previous message
-            return (
-                <MessageItem
-                    key={msg.id}
-                    msg={msg}
-                    userId={userId}
-                    appId={appId}
-                    activeRoomCode={activeRoomCode}
-                    db={db}
-                    myMessageBubbleBg={myMessageBubbleBg}
-                    myBubbleTextColor={myBubbleTextColor}
-                    currentTheme={currentTheme}
-                    profilePictureUrl={profilePictureUrl}
-                    isAdmin={isAdmin}
-                    hoverToDeleteEnabled={hoverToDeleteEnabled}
-                    onDeleteMessage={handleDeleteMessage}
-                    onOpenUserProfile={handleOpenUserProfile}
-                    showAdminTag={showAdminTag}
-                    adminTagColor={adminTagColor}
-                    adminTagText={adminTagText}
-                    showOthersBubbleColors={showOthersBubbleColors}
-                    profileDecorationUrl={profileDecorationUrl}
-                    isDMActive={isDMActive}
-                    prevMessage={prevMsg} // NEW PROP ADDED HERE
-                />
-=======
                           messages.map((msg) => (
 <MessageItem
   key={msg.id}
@@ -2827,7 +2799,6 @@ React.useEffect(() => {
   showOthersBubbleColors={showOthersBubbleColors}
   isDMActive={isDMActive} // NEW PROP ADDED HERE
                             />
->>>>>>> parent of ce1b1d0 (bug fixes)
                           ))
                         )}
                         <div ref={messagesEndRef} />
@@ -4602,5 +4573,4 @@ const ScreensaverDisplay = ({ currentTheme, onDeactivate }) => {
     </script>
 </body>
 </html>
-
 
